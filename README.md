@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 使用バージョン（Ver.1 MVP）
+
+- Node.js: v24.18.1
+- npm: 11.16.0
+- Git: 2.55.0.windows.3
+- Next.js: 16.3.4
+- React: 19.2.8
+- TypeScript: 5.9.3
+
+（Next.js / React / TypeScript のバージョンは `package-lock.json` でも確認できます）
+
 ## Getting Started
 
 First, run the development server:
