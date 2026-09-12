@@ -1,0 +1,7 @@
+dish_name,description,search_image_url,display_order,is_active
+ガパオ,ピリ辛のひき肉バジル炒めご飯,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/gapao.jpg,1,true
+カオマンガイ,辛くない蒸し鶏ご飯,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/khao-man-gai.jpg,2,true
+パッタイ,甘酸っぱいタイ風焼きそば,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/pad-thai.jpg,3,true
+タイカレー,ココナッツ風味のタイカレー,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/thai-curry.jpg,4,true
+トムヤムクン,辛くて酸っぱいエビのスープ,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/tom-yum-goong.jpg,5,true
+ヤムウンセン,春雨と野菜のピリ辛サラダ,,6,true
