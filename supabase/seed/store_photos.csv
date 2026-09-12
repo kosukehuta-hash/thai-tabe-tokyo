@@ -1,0 +1,4 @@
+store_id,photo_type,dish_id,photo_url,alt_text,display_order
+1,外観,,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/stores/store-001-exterior-01.png,タイ料理店の外観イメージ（AI生成）,1
+1,店内,,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/stores/store-001-interior-01.png,タイ料理店の店内イメージ（AI生成）,1
+1,料理,1,https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/stores/store-001-gapao-01.png,ガパオの料理イメージ（AI生成）,1
