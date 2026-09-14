@@ -379,20 +379,21 @@
     gap: 18px 6px;
   }
 
+  .cardBody {
+    flex: 1;
+  }
+
+  .detailButton {
+    margin-top: auto;
+  }
+
   .infoRow {
-    flex-wrap: nowrap;
-    white-space: nowrap;
     font-size: 14px;
   }
 
   .hoursRow {
-    flex-wrap: nowrap;
     gap: 6px 20px;
     font-size: 14px;
-  }
-
-  .hoursItem {
-    flex-shrink: 0;
   }
 
   .photoWrapper {
@@ -417,6 +418,5 @@
   .detailButton {
     min-height: 38px;
     font-size: 15px;
-    margin-top: 2px;
   }
 }
