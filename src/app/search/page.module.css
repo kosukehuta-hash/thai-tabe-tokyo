@@ -1,0 +1,422 @@
+.headerBand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #fdf9f2;
+  border-bottom: 2px solid #e2712b;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerLogoIcon {
+  width: auto;
+  height: 32px;
+}
+
+.headerLogoText {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #0b4f1b;
+  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.page {
+  width: 94vw;
+  max-width: 1450px;
+  margin: 24px auto;
+  font-family: var(--font-geist-sans);
+}
+
+/* time指定なし(すべて)用: タイトルは単独の行 */
+.titleRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #2b2118;
+}
+
+.count {
+  margin-top: 2px;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: #2b2118;
+}
+
+.countNumber {
+  margin: 0 2px;
+  color: #e2712b;
+  font-weight: 700;
+}
+
+.topActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.changeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.changeButton {
+  background-color: #1f4d3a;
+  color: #ffffff;
+}
+
+.buttonIcon {
+  width: 15px;
+  height: 15px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.buttonIconGreen {
+  width: 15px;
+  height: 15px;
+  color: #1f4d3a;
+  flex-shrink: 0;
+}
+
+/* time指定なし(すべて)用: 条件タグと操作ボタンを同じ行に */
+.conditionsBlock {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.conditionsLabel {
+  flex: 0 0 auto;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: #6f6255;
+  white-space: nowrap;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tagRowEmpty {
+  font-size: 13px;
+  color: #6f6255;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #eee5d8;
+  background-color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b2118;
+  white-space: nowrap;
+}
+
+.areaTag {
+  position: relative;
+  left: -1mm;
+  top: -1cm;
+  height: 46px;
+  padding: 0 20px;
+  font-size: 16px;
+}
+
+.tagCheck {
+  width: 15px;
+  height: 15px;
+  color: #1f4d3a;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .areaTag {
+    top: 0;
+  }
+
+  .topActions {
+    flex-basis: 100%;
+  }
+}
+
+.storeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border: 1px solid #eee5d8;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(43, 33, 24, 0.06);
+}
+
+.photoWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #fdf6e8;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.photo {
+  object-fit: cover;
+  object-position: center;
+}
+
+.photoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #fdf6e8;
+  color: #a89a86;
+  font-size: 13px;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+
+.storeName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2b2118;
+}
+
+.infoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: 13px;
+  color: #2b2118;
+}
+
+.hoursRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 13px;
+  color: #2b2118;
+}
+
+.hoursItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.priceText {
+  margin-left: 2px;
+  color: #6f6255;
+}
+
+.iconAccent {
+  width: 16px;
+  height: 16px;
+  color: #e2712b;
+  flex-shrink: 0;
+}
+
+.iconMoon {
+  width: 16px;
+  height: 16px;
+  color: #3a6ea5;
+  flex-shrink: 0;
+}
+
+.detailButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 4px;
+  border-radius: 8px;
+  background-color: #1f4d3a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.detailArrow {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .headerBand {
+    position: relative;
+    padding: 8px 16px;
+  }
+
+  .headerBand::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: -2px;
+    left: 0;
+    width: calc(100vw - 100%);
+    background-color: #ffffff;
+    pointer-events: none;
+  }
+
+  .headerLogoIcon {
+    height: 44px;
+  }
+
+  .headerLogoText {
+    font-size: 33px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+    margin-top: 12px;
+    box-sizing: border-box;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .count {
+    font-size: 16px;
+  }
+
+  .titleRow {
+    margin-bottom: 8px;
+  }
+
+  .conditionsBlock {
+    display: grid;
+    grid-template-columns: minmax(220px, 28%) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .conditionsLabel {
+    grid-column: 1;
+    justify-self: end;
+  }
+
+  .tagRow {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .tag {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    height: 46px;
+    padding: 0 20px;
+    font-size: 16px;
+  }
+
+  .areaTag {
+    top: 0;
+  }
+
+  .topActions {
+    grid-column: 3;
+    flex: 0 0 auto;
+  }
+
+  .storeGrid {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 6px;
+  }
+
+  .infoRow {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .hoursRow {
+    flex-wrap: nowrap;
+    gap: 6px 20px;
+    font-size: 14px;
+  }
+
+  .hoursItem {
+    flex-shrink: 0;
+  }
+
+  .photoWrapper {
+    aspect-ratio: auto;
+    height: calc(150px + 5mm);
+  }
+
+  .photo {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .cardBody {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+
+  .storeName {
+    font-size: 18px;
+  }
+
+  .detailButton {
+    min-height: 38px;
+    font-size: 15px;
+    margin-top: 2px;
+  }
+}

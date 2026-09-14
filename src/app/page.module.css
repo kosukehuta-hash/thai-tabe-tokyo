@@ -518,7 +518,7 @@
   }
 
   .conditionLabel {
-    flex: 0 0 180px;
+    flex: 0 0 200px;
     font-size: 17px;
     white-space: nowrap;
   }
@@ -532,8 +532,10 @@
 
   .conditionOptions.areaOptions {
     display: grid;
-    grid-template-columns: repeat(6, 170px);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 16px;
+    max-width: 1100px;
+    min-width: 0;
   }
 
   .areaIcon {
@@ -564,13 +566,13 @@
     font-size: 14px;
     border-radius: 6px;
     text-align: center;
-    position: relative;
-    left: 26px;
   }
 
-  .areaOptions .optionButton,
-  .timeOptions .optionButton {
-    left: 36px;
+  .areaOptions .optionButton {
+    position: static;
+    left: auto;
+    width: auto;
+    min-width: 0;
   }
 
   .dishGrid {

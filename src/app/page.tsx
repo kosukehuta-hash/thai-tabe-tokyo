@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import styles from "./page.module.css";
@@ -45,6 +45,26 @@ const U01_DISH_NAMES = [
 ];
 
 type FetchStatus = "loading" | "success" | "error";
+
+function parsePositiveIntParam(value: string | null): number | null {
+  if (!value || !/^[1-9][0-9]*$/.test(value)) {
+    return null;
+  }
+  return Number(value);
+}
+
+function parseTimeParam(value: string | null): TimeValue | null {
+  return value === "lunch" || value === "dinner" ? value : null;
+}
+
+function parseSceneParam(value: string | null): SceneValue | null {
+  return value === "solo" ||
+    value === "date" ||
+    value === "friends" ||
+    value === "family"
+    ? value
+    : null;
+}
 
 function SearchIcon() {
   return (
@@ -193,17 +213,26 @@ function ConditionBox<T extends string | number>({
   );
 }
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [areas, setAreas] = useState<Area[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [status, setStatus] = useState<FetchStatus>("loading");
 
-  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
-  const [selectedTime, setSelectedTime] = useState<TimeValue | null>(null);
-  const [selectedScene, setSelectedScene] = useState<SceneValue | null>(null);
-  const [selectedDishId, setSelectedDishId] = useState<number | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(() =>
+    parsePositiveIntParam(searchParams.get("area_id"))
+  );
+  const [selectedTime, setSelectedTime] = useState<TimeValue | null>(() =>
+    parseTimeParam(searchParams.get("time"))
+  );
+  const [selectedScene, setSelectedScene] = useState<SceneValue | null>(() =>
+    parseSceneParam(searchParams.get("scene"))
+  );
+  const [selectedDishId, setSelectedDishId] = useState<number | null>(() =>
+    parsePositiveIntParam(searchParams.get("dish_id"))
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -463,5 +492,13 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }
