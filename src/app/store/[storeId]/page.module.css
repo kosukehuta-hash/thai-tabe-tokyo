@@ -1,0 +1,564 @@
+.pageShell {
+  width: 100%;
+  background-color: #fdf9f2;
+}
+
+.page {
+  width: 94vw;
+  max-width: 1450px;
+  margin: 24px auto;
+  font-family: var(--font-geist-sans);
+  padding: 24px;
+}
+
+.message {
+  margin-top: 8px;
+  color: #333;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.actionLink {
+  color: #b65c1f;
+  text-decoration: underline;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  height: 42px;
+  padding: 0 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f4d3a;
+  text-decoration: none;
+  background-color: #ffffff;
+  border: 1px solid #1f4d3a;
+  border-radius: 999px;
+}
+
+.headerBand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #fdf9f2;
+  border-bottom: 2px solid #e2712b;
+}
+
+.headerBackLink {
+  display: none;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerLogoIcon {
+  width: auto;
+  height: 32px;
+}
+
+.headerLogoText {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #0b4f1b;
+  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.layoutGrid {
+  display: flex;
+  flex-direction: column;
+}
+
+.leftColumn {
+  display: contents;
+}
+
+.rightColumn {
+  display: contents;
+}
+
+.photoRow {
+  display: contents;
+}
+
+.infoCard {
+  display: contents;
+}
+
+.photoArea {
+  order: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #fdf6e8;
+  border-radius: 12px;
+  overflow: hidden;
+  color: #a89a86;
+  font-size: 13px;
+}
+
+.photo {
+  object-fit: cover;
+  object-position: center;
+}
+
+.photoPlaceholderText {
+  color: #a89a86;
+  font-size: 13px;
+}
+
+.storeName {
+  order: 2;
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2b2118;
+}
+
+.catchCopy {
+  order: 3;
+  margin-top: 8px;
+  font-size: 15px;
+  color: #6f6255;
+}
+
+.infoRows {
+  order: 4;
+  display: flex;
+  flex-direction: column;
+  margin-top: 14px;
+  border-top: 1px solid #eee5d8;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 18px 92px 1fr;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 40px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee5d8;
+  font-size: 14px;
+}
+
+.infoRowIcon {
+  width: 16px;
+  height: 16px;
+  color: #e2712b;
+  flex-shrink: 0;
+}
+
+.infoRowIconImage {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.infoRowLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b2118;
+  white-space: nowrap;
+}
+
+.infoRowValue {
+  min-width: 0;
+  font-size: 14px;
+  color: #2b2118;
+  line-height: 1.5;
+}
+
+.infoLabel {
+  font-weight: 700;
+  color: #6f6255;
+}
+
+.infoValue {
+  color: #2b2118;
+}
+
+.disclaimer {
+  order: 9;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #a89a86;
+}
+
+.atmosphereItem {
+  order: 5;
+  margin-top: 8px;
+  display: block;
+}
+
+.sectionHeading {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2b2118;
+}
+
+.atmosphereText {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #2b2118;
+}
+
+.interiorPhotoList {
+  order: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.interiorPhotoArea {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #fdf6e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dishSection {
+  order: 7;
+  margin-top: 24px;
+}
+
+.dishGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dishCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #eee5d8;
+  border-radius: 12px;
+  background-color: #ffffff;
+}
+
+.dishPhotoArea {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 4px;
+  background-color: #fdf6e8;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.matchBadge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background-color: #1f4d3a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.dishName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b2118;
+}
+
+.dishDescription {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6f6255;
+}
+
+.basicInfoSection {
+  order: 8;
+  margin-top: 24px;
+}
+
+.basicInfoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.basicInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.basicInfoItem dt {
+  margin: 0;
+}
+
+.basicInfoItem dd {
+  margin: 0;
+}
+
+.hoursLine {
+  display: block;
+}
+
+.externalLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.externalLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid #1f4d3a;
+  background-color: #ffffff;
+  color: #1f4d3a;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (min-width: 768px) {
+  .page {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+    margin-top: 12px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .headerBand {
+    position: relative;
+    padding: 8px 16px;
+  }
+
+  .headerBackLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    left: max(36px, calc((100vw - 1220px) / 2 - 74px));
+    top: 50%;
+    transform: translateY(-50%);
+    height: 42px;
+    padding: 0 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f4d3a;
+    text-decoration: none;
+    background-color: #ffffff;
+    border: 1px solid #1f4d3a;
+    border-radius: 999px;
+  }
+
+  .backLink {
+    display: none;
+  }
+
+  .headerBand::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: -2px;
+    left: 0;
+    width: calc(100vw - 100%);
+    background-color: #ffffff;
+    pointer-events: none;
+  }
+
+  .headerLogoIcon {
+    height: 44px;
+  }
+
+  .headerLogoText {
+    font-size: 33px;
+  }
+
+  .pageShell {
+    min-height: calc(100vh - 62px);
+    box-sizing: border-box;
+  }
+
+  .layoutGrid {
+    display: grid;
+    grid-template-columns: 40fr 32fr 28fr;
+    column-gap: 20px;
+    align-items: start;
+  }
+
+  .leftColumn {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / 3;
+    min-width: 0;
+  }
+
+  .rightColumn {
+    display: block;
+    grid-column: 3;
+    align-self: stretch;
+    min-width: 0;
+  }
+
+  .photoRow {
+    display: grid;
+    grid-template-columns: 40fr 32fr;
+    column-gap: 20px;
+  }
+
+  .infoCard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    padding: 16px 18px;
+    background-color: #fdf9f2;
+    border: 1px solid #eee5d8;
+    border-radius: 12px;
+  }
+
+  .photoArea {
+    order: initial;
+    grid-column: 1;
+    min-width: 0;
+    height: 275px;
+    aspect-ratio: auto;
+  }
+
+  .photoArea .photo {
+    object-position: center top;
+  }
+
+  .interiorPhotoList {
+    order: initial;
+    grid-column: 2;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-top: 0;
+    gap: 8px;
+    height: 275px;
+    aspect-ratio: auto;
+  }
+
+  .interiorPhotoArea {
+    flex: 1 1 0;
+    width: 100%;
+    aspect-ratio: auto;
+  }
+
+  .storeName {
+    order: initial;
+    margin-top: 0;
+    font-size: 24px;
+  }
+
+  .catchCopy {
+    order: initial;
+    margin-top: 0;
+    font-size: 15px;
+  }
+
+  .infoRows {
+    order: initial;
+    margin-top: 8px;
+  }
+
+  .infoRow {
+    grid-template-columns: 18px 84px 1fr;
+    min-height: 34px;
+    padding: 6px 0;
+  }
+
+  .atmosphereItem {
+    order: initial;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee5d8;
+  }
+
+  .infoRows .infoRow:last-child {
+    border-bottom: none;
+  }
+
+  .disclaimer {
+    order: initial;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .dishSection {
+    order: initial;
+    margin-top: 16px;
+    min-width: 0;
+  }
+
+  .basicInfoSection {
+    order: initial;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee5d8;
+  }
+
+  .basicInfoItem {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    column-gap: 10px;
+    align-items: start;
+  }
+
+  .basicInfoItem dt {
+    white-space: nowrap;
+  }
+
+  .dishGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .dishCard {
+    padding: 10px;
+    gap: 3px;
+  }
+
+  .dishPhotoArea {
+    aspect-ratio: auto;
+    height: 160px;
+    margin-bottom: 3px;
+  }
+}

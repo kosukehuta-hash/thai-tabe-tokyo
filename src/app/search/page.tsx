@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import styles from "./page.module.css";
+import ScrollRestorer from "./ScrollRestorer";
+import StoreDetailLink from "./StoreDetailLink";
 import {
-  ArrowRightIcon,
   CheckIcon,
   ForkKnifeIcon,
   MoonIcon,
@@ -380,6 +381,21 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const backToTopQuery = backToTopParams.toString();
   const backToTopHref = backToTopQuery ? `/?${backToTopQuery}` : "/";
 
+  const detailParams = new URLSearchParams();
+  if (areaId !== null) {
+    detailParams.set("area_id", String(areaId));
+  }
+  if (time !== null) {
+    detailParams.set("time", time);
+  }
+  if (scene !== null) {
+    detailParams.set("scene", scene);
+  }
+  if (dishId !== null) {
+    detailParams.set("dish_id", String(dishId));
+  }
+  const detailQuery = detailParams.toString();
+
   const topActionsNode = (
     <div className={styles.topActions}>
       <Link href={backToTopHref} className={styles.changeButton}>
@@ -492,15 +508,20 @@ export default async function SearchPage(props: PageProps<"/search">) {
                 </div>
               )}
 
-              <div className={styles.detailButton}>
-                詳しく見る
-                <ArrowRightIcon className={styles.detailArrow} />
-              </div>
+              <StoreDetailLink
+                href={
+                  detailQuery
+                    ? `/store/${store.store_id}?${detailQuery}`
+                    : `/store/${store.store_id}`
+                }
+              />
             </div>
           </div>
         ))}
         </div>
       </div>
+
+      <ScrollRestorer />
     </>
   );
 }
