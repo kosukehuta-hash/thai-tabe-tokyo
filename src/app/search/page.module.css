@@ -61,12 +61,6 @@
   font-weight: 700;
 }
 
-.topActions {
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
 .changeButton {
   display: inline-flex;
   align-items: center;
@@ -84,6 +78,16 @@
 .changeButton {
   background-color: #1f4d3a;
   color: #ffffff;
+}
+
+/* ヘッダー内(PC)配置用。基本は非表示にし、768px以上でヘッダーへ絶対配置する */
+.headerChangeButton {
+  display: none;
+}
+
+/* 本文先頭(モバイル)配置用。768px以上ではヘッダー側に表示するため非表示にする */
+.topChangeButtonMobile {
+  margin-bottom: 16px;
 }
 
 .buttonIcon {
@@ -163,10 +167,6 @@
 @media (max-width: 767px) {
   .areaTag {
     top: 0;
-  }
-
-  .topActions {
-    flex-basis: 100%;
   }
 }
 
@@ -333,7 +333,7 @@
 
   .conditionsBlock {
     display: grid;
-    grid-template-columns: minmax(220px, 28%) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(220px, 28%) minmax(0, 1fr);
     align-items: center;
     gap: 16px;
     margin-bottom: 12px;
@@ -366,9 +366,16 @@
     top: 0;
   }
 
-  .topActions {
-    grid-column: 3;
-    flex: 0 0 auto;
+  .headerChangeButton {
+    display: inline-flex;
+    position: absolute;
+    left: max(36px, calc((100vw - 1220px) / 2 - 74px));
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .topChangeButtonMobile {
+    display: none;
   }
 
   .storeGrid {
