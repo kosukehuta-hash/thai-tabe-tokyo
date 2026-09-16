@@ -63,6 +63,18 @@ function formatPrice(value: number | null): string | null {
 
 const DAY_PREFIX = /^(月|火|水|木|金|土|日|祝|平日)/;
 
+// U02「すべて」選択時の外観画像のみに適用する、店舗ごとのobject-position縦位置調整。
+// 未指定の店舗は既定値(center center)のまま。
+const EXTERIOR_PHOTO_POSITION_BY_STORE: Record<number, string> = {
+  11: "center 40%",
+  21: "center 40%",
+  34: "center 40%",
+  6: "center 40%",
+  27: "center 20%",
+  40: "center 20%",
+  1: "center 20%",
+};
+
 // U02一覧表示用に、営業時間文字列からL.O.等の括弧内補足情報を除き、
 // 曜日ごとに区切られている場合は先頭の区分(通常は平日)だけを残す。
 // DBの値(store.lunch_hours / dinner_hours)自体は変更しない。
@@ -260,12 +272,13 @@ export default async function SearchPage(props: PageProps<"/search">) {
   type StorePhoto = { photoUrl: string; altText: string | null };
 
   const photoByStore = new Map<number, StorePhoto>();
-  if (storeIds.length > 0) {
+  if (storeIds.length > 0 && dishId === null) {
+    // 料理「すべて」選択時は料理画像を使わず、店舗の外観画像を表示する。
     const { data } = await supabase
       .from("store_photos")
       .select("store_id, photo_url, alt_text, display_order")
       .in("store_id", storeIds)
-      .eq("photo_type", "料理")
+      .eq("photo_type", "外観")
       .order("store_id", { ascending: true })
       .order("display_order", { ascending: true });
 
@@ -275,6 +288,35 @@ export default async function SearchPage(props: PageProps<"/search">) {
           photoUrl: row.photo_url,
           altText: row.alt_text,
         });
+      }
+    }
+  } else if (storeIds.length > 0 && dishId !== null) {
+    const { data } = await supabase
+      .from("store_photos")
+      .select("store_id, dish_id, photo_url, alt_text, display_order")
+      .in("store_id", storeIds)
+      .eq("photo_type", "料理")
+      .eq("dish_id", dishId)
+      .order("store_id", { ascending: true })
+      .order("display_order", { ascending: true });
+
+    // 選択中の dish_id と一致する写真だけを候補にし、他の料理画像では代用しない。
+    const candidatesByStore = new Map<number, StorePhoto[]>();
+    for (const row of data ?? []) {
+      const photo = { photoUrl: row.photo_url, altText: row.alt_text };
+      const list = candidatesByStore.get(row.store_id) ?? [];
+      list.push(photo);
+      candidatesByStore.set(row.store_id, list);
+    }
+
+    for (const storeId of storeIds) {
+      const candidates = candidatesByStore.get(storeId) ?? [];
+      const u02Photo = candidates.find((photo) =>
+        photo.photoUrl.includes("-u02-")
+      );
+      const photo = u02Photo ?? candidates[0];
+      if (photo) {
+        photoByStore.set(storeId, photo);
       }
     }
   }
@@ -396,18 +438,17 @@ export default async function SearchPage(props: PageProps<"/search">) {
   }
   const detailQuery = detailParams.toString();
 
-  const topActionsNode = (
-    <div className={styles.topActions}>
-      <Link href={backToTopHref} className={styles.changeButton}>
-        <PencilIcon className={styles.buttonIcon} />
-        条件を変更する
-      </Link>
-    </div>
-  );
-
   return (
     <>
       <header className={styles.headerBand} data-page="search">
+        <Link
+          href={backToTopHref}
+          className={`${styles.changeButton} ${styles.headerChangeButton}`}
+        >
+          <PencilIcon className={styles.buttonIcon} />
+          条件を変更する
+        </Link>
+
         <div className={styles.headerInner}>
           <Image
             src="/images/thai-temple-logo-v2.png"
@@ -422,6 +463,14 @@ export default async function SearchPage(props: PageProps<"/search">) {
       </header>
 
       <div className={styles.page}>
+        <Link
+          href={backToTopHref}
+          className={`${styles.changeButton} ${styles.topChangeButtonMobile}`}
+        >
+          <PencilIcon className={styles.buttonIcon} />
+          条件を変更する
+        </Link>
+
         <div className={styles.titleRow}>
           <h1 className={styles.title}>検索結果</h1>
           <p className={styles.count}>
@@ -434,7 +483,6 @@ export default async function SearchPage(props: PageProps<"/search">) {
         <div className={styles.conditionsBlock}>
           <span className={styles.conditionsLabel}>選択中の条件</span>
           {conditionTagsNode}
-          {topActionsNode}
         </div>
 
         <div className={styles.storeGrid}>
@@ -448,9 +496,20 @@ export default async function SearchPage(props: PageProps<"/search">) {
                   fill
                   sizes="(max-width: 767px) 100vw, 33vw"
                   className={styles.photo}
+                  style={
+                    dishId === null
+                      ? {
+                          objectPosition:
+                            EXTERIOR_PHOTO_POSITION_BY_STORE[store.store_id] ??
+                            "center",
+                        }
+                      : undefined
+                  }
                 />
               ) : (
-                <div className={styles.photoPlaceholder}>料理写真準備中</div>
+                <div className={styles.photoPlaceholder}>
+                  {dishId === null ? "店舗写真準備中" : "料理写真準備中"}
+                </div>
               )}
             </div>
 

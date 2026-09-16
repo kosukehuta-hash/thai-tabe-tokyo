@@ -478,10 +478,13 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
                         料理写真準備中
                       </span>
                     )}
-                    {isMatched && (
-                      <span className={styles.matchBadge}>条件一致</span>
-                    )}
                   </div>
+                  {isMatched && (
+                    <div className={styles.matchTag}>
+                      <span className={styles.matchTagStripe} />
+                      <span className={styles.matchTagLabel}>条件一致</span>
+                    </div>
+                  )}
                   <p className={styles.dishName}>{dish.dish_name}</p>
                   <p className={styles.dishDescription}>{dish.description}</p>
                 </div>

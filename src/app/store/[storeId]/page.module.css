@@ -250,6 +250,7 @@
 }
 
 .dishCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -272,18 +273,51 @@
   justify-content: center;
 }
 
-.matchBadge {
+.matchTag {
+  /* dishCardのpaddingが12pxのため、写真枠の角からtop/left -4pxの見た目にするには8pxを指定する */
   position: absolute;
-  top: 6px;
-  left: 6px;
-  height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background-color: #1f4d3a;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  width: 78px;
+  height: 26px;
+  background-color: #252a7c;
+  border: 1px solid #d9a21b;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.matchTagStripe {
+  flex-shrink: 0;
+  width: 9px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #d71920 0%,
+    #d71920 16.67%,
+    #ffffff 16.67%,
+    #ffffff 33.33%,
+    #252a7c 33.33%,
+    #252a7c 66.67%,
+    #ffffff 66.67%,
+    #ffffff 83.33%,
+    #d71920 83.33%,
+    #d71920 100%
+  );
+}
+
+.matchTagLabel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 22px;
+  white-space: nowrap;
 }
 
 .dishName {
