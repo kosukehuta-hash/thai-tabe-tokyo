@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 公開URL
+
+https://thai-tabe-tokyo.vercel.app
+
 ## 使用バージョン（Ver.1 MVP）
 
 - Node.js: v24.18.1
