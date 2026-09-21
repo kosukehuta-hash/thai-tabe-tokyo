@@ -142,7 +142,11 @@ function CheckIcon() {
 
 function CheckBadgeIcon() {
   return (
-    <svg viewBox="0 0 24 24" className={styles.checkBadgeIcon} aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className={styles.checkBadgeIcon}
+      aria-hidden="true"
+    >
       <path
         fill="currentColor"
         d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"
@@ -174,9 +178,7 @@ function ConditionBox<T extends string | number>({
         {icon}
         <span>{label}</span>
       </div>
-      <div
-        className={`${styles.conditionOptions} ${optionsClassName ?? ""}`}
-      >
+      <div className={`${styles.conditionOptions} ${optionsClassName ?? ""}`}>
         <button
           type="button"
           className={`${styles.optionButton} ${
@@ -224,16 +226,16 @@ function HomeContent() {
   const [status, setStatus] = useState<FetchStatus>("loading");
 
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(() =>
-    parsePositiveIntParam(searchParams.get("area_id"))
+    parsePositiveIntParam(searchParams.get("area_id")),
   );
   const [selectedTime, setSelectedTime] = useState<TimeValue | null>(() =>
-    parseTimeParam(searchParams.get("time"))
+    parseTimeParam(searchParams.get("time")),
   );
   const [selectedScene, setSelectedScene] = useState<SceneValue | null>(() =>
-    parseSceneParam(searchParams.get("scene"))
+    parseSceneParam(searchParams.get("scene")),
   );
   const [selectedDishId, setSelectedDishId] = useState<number | null>(() =>
-    parsePositiveIntParam(searchParams.get("dish_id"))
+    parsePositiveIntParam(searchParams.get("dish_id")),
   );
 
   useEffect(() => {
@@ -250,7 +252,9 @@ function HomeContent() {
           .order("display_order"),
         supabase
           .from("dishes")
-          .select("dish_id, dish_name, description, search_image_url, display_order")
+          .select(
+            "dish_id, dish_name, description, search_image_url, display_order",
+          )
           .eq("is_active", true)
           .in("dish_name", U01_DISH_NAMES)
           .order("display_order"),
@@ -434,9 +438,7 @@ function HomeContent() {
                           </span>
                         )}
                       </span>
-                      <span className={styles.dishName}>
-                        {dish.dish_name}
-                      </span>
+                      <span className={styles.dishName}>{dish.dish_name}</span>
                       <span className={styles.dishDescription}>
                         {dish.description}
                       </span>
