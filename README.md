@@ -184,6 +184,100 @@ npm run dev
 http://localhost:3000
 ```
 
+## Supabaseのマイグレーション・seed適用（ローカル開発）
+
+Supabaseのデータベース構造（migration）と、動作確認用の最小データ（seed）を、**ローカルDocker環境に再現・検証する手順**です。Next.jsアプリ全体をローカルSupabaseで動かす手順ではありません（アプリの接続先については後述の「Next.jsアプリの接続先について」を参照してください）。
+
+Node.js・npmのバージョンは「動作環境（Requirements）」を、`.env.local`の設定は「Getting Started」の「3. 環境変数を設定」を参照してください。
+
+### 前提条件
+
+- Docker Desktop（ローカルSupabase環境の起動に使用）
+- Supabase CLI
+- Node.js / npm（「動作環境（Requirements）」参照）
+- `.env.local` の設定（「Getting Started」の「3. 環境変数を設定」参照）
+
+### ローカルSupabase環境の起動
+
+プロジェクトルートで以下を実行します。
+
+```bash
+supabase start
+```
+
+このコマンドにより、
+
+1. `supabase/migrations/` 配下のmigrationファイルがタイムスタンプ順（ファイル名順）にすべて適用され、テーブル・RLS・Storage設定などのDB構造が作成されます
+2. 続けて `supabase/seed.sql` が実行され、動作確認用の初期データが投入されます
+
+### seedデータについて
+
+`supabase/seed.sql` は本番データの複製ではなく、U01（検索条件選択）〜U03（店舗詳細）の基本的な画面遷移・検索動作を確認するための最小限のデータです。
+
+| テーブル | 件数 |
+| --- | --- |
+| areas | 8件 |
+| dishes | 6件 |
+| stores | 5件 |
+| store_dishes | 21件 |
+| store_photos | 0件 |
+| store_visit_notes | 0件 |
+
+- Authユーザー・Storage画像は含みません
+- 動作確認できるよう、店舗5件は `is_published = true` としています
+- 本番Supabase Storageへの依存を避けるため、`dishes.search_image_url` はNULLにしています
+- 店舗写真（`store_photos`）は投入していませんが、写真が無い場合はアプリ側に「写真準備中」の表示が用意されているため、U02・U03の画面確認に支障はありません
+
+### DBを初期状態へ戻す
+
+```bash
+supabase db reset
+```
+
+ローカルDBを作り直し、migration → seedを再適用します。
+
+### ローカルSupabaseの停止
+
+```bash
+supabase stop
+```
+
+### Next.jsアプリの接続先について
+
+- `supabase start` はローカルSupabase環境を起動するコマンドであり、**Next.jsアプリの接続先を自動的に変更するものではありません**
+- Next.jsアプリの接続先は、`.env.local` の `NEXT_PUBLIC_SUPABASE_URL` ・ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` によって決まります
+- 現在これらの環境変数がホスティング済みSupabaseを指している場合、`supabase start` を実行した後も、アプリは引き続きそのホスティング済みSupabaseへ接続します
+
+（参考）ローカルSupabaseを実際にアプリから利用したい場合は、
+
+1. `supabase status` でローカルのAPI URLとPublishable Keyを確認する
+2. `.env.local` の上記2つの環境変数をローカル用の値へ変更する
+3. Next.js開発サーバーを再起動する
+
+という切り替えが必要です。本章の主目的はmigration・seedの検証であり、この切り替えは必須ではありません。
+
+### 既知の制限（ローカルSupabaseへ接続先を切り替えた場合）
+
+- 現在の `next.config.ts` は、Supabase Storageの画像を `https` 前提で許可しています
+- ローカルSupabaseは `http` で起動するため、接続先をローカルに切り替えた場合、Storage画像は現状のコードのままでは表示できません
+- `supabase/seed.sql` 自体にもStorage画像は含めていません（本章の手順はDBデータの再現のみを対象としています）
+
+### トラブルシューティング：ポート競合
+
+`supabase start` は `supabase/config.toml` に設定されたポート（デフォルトで`54321`番台）を使用します。別のSupabaseローカルプロジェクトが同時に起動している場合、ポートが競合して起動に失敗することがあります。その場合は `supabase/config.toml` 内の該当ポート番号を、未使用のポートへ一時的に変更してください。
+
+### ホスティング済みSupabaseプロジェクトへの適用について
+
+新規のホスティング済みSupabaseプロジェクトへ適用する場合は、Supabase CLIでプロジェクトをlinkした上でmigration/seedを適用できます。既存データのあるプロジェクトにはseed.sqlを再実行しないでください。
+
+※ ホスティング済みプロジェクトへの適用手順は、本READMEでは動作検証を行っていません。検証済みなのはローカルDocker環境（`supabase start`／`supabase db reset`）での動作のみです。
+
+### seed.sqlに関する注意事項
+
+- `supabase/seed.sql` は、新規・空のデータベースへの初回投入を前提としています
+- 同じDBに対して繰り返し実行すると、unique制約違反により失敗する可能性があります
+- 本番DBへのseed投入を目的としたものではありません
+
 ## デモアカウント（レビュー用）
 
 認証機能・店舗メモ機能をお試しいただくためのレビュー専用共有アカウントです。
