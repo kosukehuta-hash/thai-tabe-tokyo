@@ -97,13 +97,6 @@
   flex-shrink: 0;
 }
 
-.buttonIconGreen {
-  width: 15px;
-  height: 15px;
-  color: #1f4d3a;
-  flex-shrink: 0;
-}
-
 /* time指定なし(すべて)用: 条件タグと操作ボタンを同じ行に */
 .conditionsBlock {
   display: flex;
@@ -126,11 +119,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.tagRowEmpty {
-  font-size: 13px;
-  color: #6f6255;
 }
 
 .tag {

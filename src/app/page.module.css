@@ -101,7 +101,8 @@
 .message {
   position: relative;
   z-index: 1;
-  font-family: var(--font-noto-serif-jp), "BIZ UDPMincho", "Yu Mincho",
+  font-family:
+    var(--font-noto-serif-jp), "BIZ UDPMincho", "Yu Mincho",
     "Hiragino Mincho ProN", serif;
   font-size: clamp(26px, 3.5vw + 13px, 48px);
   font-weight: 500;
@@ -119,8 +120,7 @@
   z-index: 1;
   width: 100%;
   max-width: 760px;
-  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic",
-    sans-serif;
+  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
   font-size: clamp(14px, 0.5vw + 12.5px, 18px);
   font-weight: 590;
   line-height: 1.6;
@@ -157,13 +157,6 @@
 .sceneIconImage {
   width: auto;
   height: 20px;
-  flex-shrink: 0;
-}
-
-.coveredDishIcon {
-  width: 32px;
-  height: 32px;
-  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -254,7 +247,10 @@
   font-size: 13px;
   text-align: center;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .optionButtonSelected {
@@ -618,7 +614,10 @@
     font-size: 13px;
     font-weight: 500;
     text-decoration: none;
-    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    transition:
+      border-color 0.15s,
+      color 0.15s,
+      background-color 0.15s;
   }
 }
 

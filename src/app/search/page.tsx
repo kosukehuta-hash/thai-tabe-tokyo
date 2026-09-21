@@ -193,7 +193,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
     let query = supabase
       .from("stores")
       .select(
-        "store_id, store_name, nearest_station_name, walk_minutes, has_lunch, lunch_hours, lunch_price_from, has_dinner, dinner_hours, dinner_price_from, scene_solo, scene_date, scene_friends, scene_family"
+        "store_id, store_name, nearest_station_name, walk_minutes, has_lunch, lunch_hours, lunch_price_from, has_dinner, dinner_hours, dinner_price_from, scene_solo, scene_date, scene_friends, scene_family",
       )
       .eq("is_published", true);
 
@@ -241,7 +241,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
   }
 
   const dishIdsInResults = Array.from(
-    new Set(storeDishRows.map((row) => row.dish_id))
+    new Set(storeDishRows.map((row) => row.dish_id)),
   );
 
   let dishNameById = new Map<number, string>();
@@ -251,7 +251,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
       .select("dish_id, dish_name")
       .in("dish_id", dishIdsInResults);
     dishNameById = new Map(
-      (data ?? []).map((row) => [row.dish_id, row.dish_name])
+      (data ?? []).map((row) => [row.dish_id, row.dish_name]),
     );
   }
 
@@ -312,7 +312,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
     for (const storeId of storeIds) {
       const candidates = candidatesByStore.get(storeId) ?? [];
       const u02Photo = candidates.find((photo) =>
-        photo.photoUrl.includes("-u02-")
+        photo.photoUrl.includes("-u02-"),
       );
       const photo = u02Photo ?? candidates[0];
       if (photo) {
@@ -368,7 +368,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
     };
   });
 
-  const hasAnyCondition = areaName !== null || time !== null || scene !== null || dishName !== null;
+  const hasAnyCondition =
+    areaName !== null || time !== null || scene !== null || dishName !== null;
 
   const conditionTagsNode = hasAnyCondition ? (
     <div className={styles.tagRow}>
@@ -486,97 +487,100 @@ export default async function SearchPage(props: PageProps<"/search">) {
         </div>
 
         <div className={styles.storeGrid}>
-        {storeDisplayInfo.map((store) => (
-          <div key={store.store_id} className={styles.card}>
-            <div className={styles.photoWrapper}>
-              {store.photo ? (
-                <Image
-                  src={store.photo.photoUrl}
-                  alt={store.photo.altText ?? store.store_name}
-                  fill
-                  sizes="(max-width: 767px) 100vw, 33vw"
-                  className={styles.photo}
-                  style={
-                    dishId === null
-                      ? {
-                          objectPosition:
-                            EXTERIOR_PHOTO_POSITION_BY_STORE[store.store_id] ??
-                            "center",
-                        }
-                      : undefined
-                  }
-                />
-              ) : (
-                <div className={styles.photoPlaceholder}>
-                  {dishId === null ? "店舗写真準備中" : "料理写真準備中"}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.cardBody}>
-              <h3 className={styles.storeName}>{store.store_name}</h3>
-
-              <div className={styles.infoRow}>
-                <WalkIcon className={styles.iconAccent} />
-                <span>
-                  {store.nearest_station_name} 徒歩{store.walk_minutes}分
-                </span>
+          {storeDisplayInfo.map((store) => (
+            <div key={store.store_id} className={styles.card}>
+              <div className={styles.photoWrapper}>
+                {store.photo ? (
+                  <Image
+                    src={store.photo.photoUrl}
+                    alt={store.photo.altText ?? store.store_name}
+                    fill
+                    sizes="(max-width: 767px) 100vw, 33vw"
+                    className={styles.photo}
+                    style={
+                      dishId === null
+                        ? {
+                            objectPosition:
+                              EXTERIOR_PHOTO_POSITION_BY_STORE[
+                                store.store_id
+                              ] ?? "center",
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <div className={styles.photoPlaceholder}>
+                    {dishId === null ? "店舗写真準備中" : "料理写真準備中"}
+                  </div>
+                )}
               </div>
 
-              {(store.lunchInfo || store.dinnerInfo) && (
-                <div className={styles.hoursRow}>
-                  {store.lunchInfo && (
-                    <span className={styles.hoursItem}>
-                      <SunIcon className={styles.iconAccent} />
-                      {store.lunchInfo.hours}
-                      {store.lunchInfo.priceText && (
-                        <span className={styles.priceText}>
-                          {store.lunchInfo.priceText}
-                        </span>
-                      )}
-                    </span>
-                  )}
-                  {store.dinnerInfo && (
-                    <span className={styles.hoursItem}>
-                      <MoonIcon className={styles.iconMoon} />
-                      {store.dinnerInfo.hours}
-                      {store.dinnerInfo.priceText && (
-                        <span className={styles.priceText}>
-                          {store.dinnerInfo.priceText}
-                        </span>
-                      )}
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className={styles.cardBody}>
+                <h3 className={styles.storeName}>{store.store_name}</h3>
 
-              {(store.sceneText || store.otherDishText || store.mainDishText) && (
                 <div className={styles.infoRow}>
-                  {store.sceneText && (
-                    <span className={styles.hoursItem}>
-                      <PersonIcon className={styles.iconAccent} />
-                      {store.sceneText}
-                    </span>
-                  )}
-                  {(store.otherDishText || store.mainDishText) && (
-                    <span className={styles.hoursItem}>
-                      <ForkKnifeIcon className={styles.iconAccent} />
-                      {store.otherDishText ?? store.mainDishText}
-                    </span>
-                  )}
+                  <WalkIcon className={styles.iconAccent} />
+                  <span>
+                    {store.nearest_station_name} 徒歩{store.walk_minutes}分
+                  </span>
                 </div>
-              )}
 
-              <StoreDetailLink
-                href={
-                  detailQuery
-                    ? `/store/${store.store_id}?${detailQuery}`
-                    : `/store/${store.store_id}`
-                }
-              />
+                {(store.lunchInfo || store.dinnerInfo) && (
+                  <div className={styles.hoursRow}>
+                    {store.lunchInfo && (
+                      <span className={styles.hoursItem}>
+                        <SunIcon className={styles.iconAccent} />
+                        {store.lunchInfo.hours}
+                        {store.lunchInfo.priceText && (
+                          <span className={styles.priceText}>
+                            {store.lunchInfo.priceText}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {store.dinnerInfo && (
+                      <span className={styles.hoursItem}>
+                        <MoonIcon className={styles.iconMoon} />
+                        {store.dinnerInfo.hours}
+                        {store.dinnerInfo.priceText && (
+                          <span className={styles.priceText}>
+                            {store.dinnerInfo.priceText}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {(store.sceneText ||
+                  store.otherDishText ||
+                  store.mainDishText) && (
+                  <div className={styles.infoRow}>
+                    {store.sceneText && (
+                      <span className={styles.hoursItem}>
+                        <PersonIcon className={styles.iconAccent} />
+                        {store.sceneText}
+                      </span>
+                    )}
+                    {(store.otherDishText || store.mainDishText) && (
+                      <span className={styles.hoursItem}>
+                        <ForkKnifeIcon className={styles.iconAccent} />
+                        {store.otherDishText ?? store.mainDishText}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <StoreDetailLink
+                  href={
+                    detailQuery
+                      ? `/store/${store.store_id}?${detailQuery}`
+                      : `/store/${store.store_id}`
+                  }
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
         </div>
       </div>
 

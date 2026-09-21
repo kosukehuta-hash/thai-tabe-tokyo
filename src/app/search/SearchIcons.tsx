@@ -115,10 +115,7 @@ export function RefreshIcon({ className }: { className?: string }) {
 export function ArrowRightIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M9 5l7 7-7 7-1.4-1.4L13.2 12 7.6 6.4z"
-      />
+      <path fill="currentColor" d="M9 5l7 7-7 7-1.4-1.4L13.2 12 7.6 6.4z" />
     </svg>
   );
 }
