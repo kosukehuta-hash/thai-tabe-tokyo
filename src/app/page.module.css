@@ -29,8 +29,11 @@
 
 .headerBand {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  row-gap: 4px;
+  column-gap: 12px;
   box-sizing: border-box;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -38,6 +41,25 @@
   padding: 12px 16px;
   background-color: var(--header-background);
   border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+/* 1600px未満は、ロゴと右側装飾（下のmin-width:768pxを参照）の間に
+   認証表示を並べる横幅が確保できないため、AuthStatusを絶対配置から
+   通常フローへ戻す。flex-basis:100%を強制することで、ロゴとの
+   合計幅がコンテナに収まる場合でも同じ行に並ばず、必ずロゴの次の
+   行を単独で占有する（中央揃えのまま2段構成になる）。
+   positionはstaticではなくrelativeにし、top/rightはautoにして
+   通常フロー上の位置から動かさない。relativeにするのは、
+   AuthStatus内のエラー表示の絶対配置基準を.wrapper自身に保つため。 */
+@media (max-width: 1599px) {
+  .headerBand {
+    --auth-status-position: relative;
+    --auth-status-top: auto;
+    --auth-status-right: auto;
+    --auth-status-transform: none;
+    --auth-status-flex-basis: 100%;
+  }
 }
 
 .logo {
@@ -477,6 +499,13 @@
 
   .heroDecorationRight {
     width: clamp(185px, 20vw, 330px);
+  }
+
+  /* 認証表示は右側に残しつつ、右側装飾（上と同じclamp幅）の左に
+     16pxの余白を空けて配置する。装飾の実際の幅と同じ式を使うことで、
+     768px〜1920px超まで一貫して装飾の上に重ならないようにする。 */
+  .headerBand {
+    --auth-status-right: calc(clamp(185px, 20vw, 330px) + 16px);
   }
 
   .heroBand {

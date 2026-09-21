@@ -45,12 +45,34 @@
 
 .headerBand {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  row-gap: 4px;
+  column-gap: 12px;
   width: 100%;
   padding: 14px 16px;
   background-color: #fdf9f2;
   border-bottom: 2px solid #e2712b;
+  position: relative;
+}
+
+/* 899px以下（320px・375pxのスマートフォン幅を含む）は、中央ロゴと
+   右側の認証表示（既定right:16px）の間隔が狭くなる可能性があるため、
+   AuthStatusを通常フローへ戻し、flex-basis:100%で必ずロゴの次の行を
+   単独で占有させる（中央揃えのまま2段構成になる）。
+   positionはstaticではなくrelativeにし、top/rightはautoにして
+   通常フロー上の位置から動かさない。relativeにするのは、
+   AuthStatus内のエラー表示の絶対配置基準を.wrapper自身に保つため。
+   900px以上は実測上の余裕を確認できたため既定の右端表示に戻す。 */
+@media (max-width: 899px) {
+  .headerBand {
+    --auth-status-position: relative;
+    --auth-status-top: auto;
+    --auth-status-right: auto;
+    --auth-status-transform: none;
+    --auth-status-flex-basis: 100%;
+  }
 }
 
 .headerBackLink {

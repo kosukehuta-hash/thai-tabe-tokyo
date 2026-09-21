@@ -1,0 +1,111 @@
+.wrapper {
+  /* 配置元のヘッダーがCSSカスタムプロパティで上書きしない限り、
+     既定では右端への絶対配置（1行表示）にする。
+     横幅が不足する画面では、配置元のheaderBandが
+     --auth-status-positionをrelativeへ、--auth-status-topを
+     autoへ、--auth-status-transformをnoneへ上書きすることで、
+     通常フローの2段目として表示できる。position:staticではなく
+     relativeにするのは、.errorの絶対配置の基準を.wrapper自身に
+     保つため（position:staticは新たな位置指定コンテキストを
+     作らないため、祖先のheaderBand基準になってしまう）。 */
+  position: var(--auth-status-position, absolute);
+  top: var(--auth-status-top, 50%);
+  right: var(--auth-status-right, 16px);
+  left: auto;
+  transform: var(--auth-status-transform, translateY(-50%));
+  /* position:relativeでheaderBandのflex子要素になったとき、
+     配置元がこれを100%へ上書きすると必ず単独の行を占有し、
+     ロゴと同じ行に並ぶことがなくなる。position:absolute時は
+     フローに参加しないため、この値は効果を持たない。 */
+  flex-basis: var(--auth-status-flex-basis, auto);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 28px;
+  min-width: 90px;
+}
+
+.authLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f4d3a;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.statusText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2b2118;
+  white-space: nowrap;
+}
+
+.logoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #1f4d3a;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #1f4d3a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.logoutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  padding: 6px 10px;
+  max-width: 220px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #b3261e;
+  background-color: #ffffff;
+  border: 1px solid #b3261e;
+  border-radius: 8px;
+  text-align: right;
+  z-index: 10;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .authLink:hover {
+    color: #163a2b;
+  }
+
+  .logoutButton:hover:not(:disabled) {
+    background-color: #f8fbf9;
+  }
+}
+
+@media (max-width: 767px) {
+  .wrapper {
+    right: 10px;
+    gap: 6px;
+  }
+
+  .authLink {
+    font-size: 12px;
+  }
+
+  .statusText {
+    font-size: 12px;
+  }
+
+  .logoutButton {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
