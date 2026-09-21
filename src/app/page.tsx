@@ -6,6 +6,8 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import styles from "./page.module.css";
 
+const ALL_DISHES_IMAGE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/thai-tabe-images/dishes/all-dishes.png`;
+
 type Area = {
   area_id: number;
   area_name: string;
@@ -450,7 +452,7 @@ function HomeContent() {
                   >
                     <span className={styles.dishImageWrapper}>
                       <Image
-                        src="https://lziiorwcgjeeuyafrjyq.supabase.co/storage/v1/object/public/thai-tabe-images/dishes/all-dishes.png"
+                        src={ALL_DISHES_IMAGE_URL}
                         alt="すべて"
                         fill
                         sizes="(max-width: 767px) 45vw, 220px"
