@@ -214,8 +214,7 @@ async function fetchMainDishPhotos(
 }
 
 type OwnNoteFetchResult =
-  | { status: "error" }
-  | { status: "success"; noteText: string | null };
+  { status: "error" } | { status: "success"; noteText: string | null };
 
 async function fetchOwnNote(
   supabaseServer: Awaited<ReturnType<typeof createServerSupabaseClient>>,
