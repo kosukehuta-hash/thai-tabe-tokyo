@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthStatus } from "@/components/AuthStatus";
+import { StoreVisitNote } from "@/components/StoreVisitNote";
 import styles from "./page.module.css";
 import { PersonIcon } from "../../search/SearchIcons";
 
@@ -211,6 +213,26 @@ async function fetchMainDishPhotos(
   return { status: "success", photoByDishId };
 }
 
+type OwnNoteFetchResult =
+  | { status: "error" }
+  | { status: "success"; noteText: string | null };
+
+async function fetchOwnNote(
+  supabaseServer: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: number,
+): Promise<OwnNoteFetchResult> {
+  const { data, error } = await supabaseServer
+    .from("store_visit_notes")
+    .select("note_text")
+    .eq("store_id", storeId)
+    .maybeSingle();
+
+  if (error) {
+    return { status: "error" };
+  }
+  return { status: "success", noteText: data?.note_text ?? null };
+}
+
 function formatPrice(value: number | null): string | null {
   if (value === null) {
     return null;
@@ -371,10 +393,20 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   const mainDishesResult = await fetchMainDishes(store.store_id);
   const sceneLabels = buildSceneLabels(store);
 
+  const supabaseServer = await createServerSupabaseClient();
+  const { data: claimsData } = await supabaseServer.auth.getClaims();
+  const currentUserId = claimsData?.claims.sub ?? null;
+
+  const ownNoteResult =
+    currentUserId !== null
+      ? await fetchOwnNote(supabaseServer, store.store_id)
+      : null;
+
   if (
     photoResult.status === "error" ||
     interiorPhotosResult.status === "error" ||
-    mainDishesResult.status === "error"
+    mainDishesResult.status === "error" ||
+    ownNoteResult?.status === "error"
   ) {
     return renderComError();
   }
@@ -690,6 +722,15 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
                     )}
                   </div>
                 </div>
+
+                {currentUserId !== null && ownNoteResult && (
+                  <div className={styles.noteSection}>
+                    <StoreVisitNote
+                      storeId={store.store_id}
+                      initialNoteText={ownNoteResult.noteText}
+                    />
+                  </div>
+                )}
 
                 <p className={styles.disclaimer}>
                   掲載情報は、確認できた内容のみ表示しています。

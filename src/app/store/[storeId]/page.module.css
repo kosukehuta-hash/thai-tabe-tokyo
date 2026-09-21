@@ -215,8 +215,12 @@
   color: #2b2118;
 }
 
-.disclaimer {
+.noteSection {
   order: 9;
+}
+
+.disclaimer {
+  order: 10;
   margin-top: 8px;
   font-size: 12px;
   line-height: 1.6;
@@ -569,6 +573,10 @@
 
   .infoRows .infoRow:last-child {
     border-bottom: none;
+  }
+
+  .noteSection {
+    order: initial;
   }
 
   .disclaimer {
