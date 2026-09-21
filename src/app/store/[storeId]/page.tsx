@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { AuthStatus } from "@/components/AuthStatus";
 import styles from "./page.module.css";
 import { PersonIcon } from "../../search/SearchIcons";
 
@@ -420,6 +421,8 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
           />
           <span className={styles.headerLogoText}>THAI TABE TOKYO</span>
         </div>
+
+        <AuthStatus />
       </header>
 
       <div className={styles.pageShell}>

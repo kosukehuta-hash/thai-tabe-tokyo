@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { AuthStatus } from "@/components/AuthStatus";
 import styles from "./page.module.css";
 
 const ALL_DISHES_IMAGE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/thai-tabe-images/dishes/all-dishes.png`;
@@ -323,6 +324,7 @@ function HomeContent() {
             />
             THAI TABE TOKYO
           </span>
+          <AuthStatus />
         </div>
 
         <div className={styles.heroBand}>

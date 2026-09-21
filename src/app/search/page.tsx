@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { AuthStatus } from "@/components/AuthStatus";
 import styles from "./page.module.css";
 import ScrollRestorer from "./ScrollRestorer";
 import StoreDetailLink from "./StoreDetailLink";
@@ -461,6 +462,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
           />
           <span className={styles.headerLogoText}>THAI TABE TOKYO</span>
         </div>
+
+        <AuthStatus />
       </header>
 
       <div className={styles.page}>
