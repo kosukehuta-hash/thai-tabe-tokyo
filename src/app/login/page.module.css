@@ -1,0 +1,118 @@
+.page {
+  --primary: #1f4d3a;
+  --primary-hover: #163a2b;
+  --primary-foreground: #ffffff;
+  --text-primary: #2b2118;
+  --text-secondary: #6f6255;
+  --border: #e6dcc9;
+  --surface: #ffffff;
+  --error: #b3261e;
+  --notice-background: #eef6f1;
+  --notice-text: #1f4d3a;
+
+  display: flex;
+  justify-content: center;
+  width: 94vw;
+  max-width: 480px;
+  margin: 48px auto;
+  color: var(--text-primary);
+}
+
+.card {
+  width: 100%;
+  padding: 32px 28px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.heading {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.notice {
+  font-size: 14px;
+  color: var(--notice-text);
+  background-color: var(--notice-background);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.input {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--text-primary);
+  background-color: var(--surface);
+}
+
+.input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.error {
+  font-size: 13px;
+  color: var(--error);
+}
+
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 32px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signupLink {
+  align-self: center;
+  padding: 4px 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .submitButton:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+  }
+
+  .signupLink:hover {
+    color: var(--text-primary);
+  }
+}
