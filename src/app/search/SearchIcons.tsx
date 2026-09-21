@@ -101,17 +101,6 @@ export function PencilIcon({ className }: { className?: string }) {
   );
 }
 
-export function RefreshIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12 5V2L7 6l5 4V7c3.31 0 6 2.69 6 6 0 1.06-.28 2.06-.76 2.92l1.47 1.47A7.93 7.93 0 0 0 20 13c0-4.42-3.58-8-8-8zm-6 8c0-1.06.28-2.06.76-2.92L5.29 8.61A7.93 7.93 0 0 0 4 13c0 4.42 3.58 8 8 8v3l5-4-5-4v3c-3.31 0-6-2.69-6-6z"
-      />
-    </svg>
-  );
-}
-
 export function ArrowRightIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">

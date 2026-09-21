@@ -82,16 +82,8 @@ export function StoreVisitNote({
         )}
 
         <div className={styles.actions}>
-          <button
-            type="submit"
-            className={styles.saveButton}
-            disabled={isBusy}
-          >
-            {isSaving
-              ? "保存中..."
-              : hasNote
-                ? "メモを更新"
-                : "メモを登録"}
+          <button type="submit" className={styles.saveButton} disabled={isBusy}>
+            {isSaving ? "保存中..." : hasNote ? "メモを更新" : "メモを登録"}
           </button>
 
           {hasNote && (

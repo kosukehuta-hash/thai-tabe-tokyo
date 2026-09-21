@@ -65,10 +65,12 @@ export async function saveNote(
     return { error: AUTH_ERROR_MESSAGE, noteText: null };
   }
 
-  const { error } = await supabase.from("store_visit_notes").upsert(
-    { user_id: userId, store_id: storeId, note_text: noteText },
-    { onConflict: "user_id,store_id" },
-  );
+  const { error } = await supabase
+    .from("store_visit_notes")
+    .upsert(
+      { user_id: userId, store_id: storeId, note_text: noteText },
+      { onConflict: "user_id,store_id" },
+    );
   if (error) {
     return { error: SAVE_ERROR_MESSAGE, noteText: null };
   }
