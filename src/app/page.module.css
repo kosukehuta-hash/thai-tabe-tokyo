@@ -160,13 +160,6 @@
   flex-shrink: 0;
 }
 
-.coveredDishIcon {
-  width: 32px;
-  height: 32px;
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
 .searchIcon {
   width: 18px;
   height: 18px;
