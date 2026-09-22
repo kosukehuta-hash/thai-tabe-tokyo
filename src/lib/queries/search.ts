@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabase } from "@/lib/supabase";
 import { getActiveAreas, getActiveU01Dishes } from "@/lib/queries/masters";
+import { logSupabaseError } from "@/lib/logger";
 import type { SceneValue, TimeValue } from "@/lib/search-conditions";
 import type { Database } from "@/types/database.types";
 
@@ -97,6 +98,13 @@ export async function fetchSearchResults(
       .eq("dish_id", validatedDishId)
       .eq("is_available", true);
     if (error) {
+      logSupabaseError({
+        route: "/search",
+        operation: "fetchSearchResults.matchedStoreIds",
+        table: "store_dishes",
+        error,
+        context: { dish_id: validatedDishId },
+      });
       throw new Error("検索結果（該当店舗）の取得に失敗しました");
     }
     matchedStoreIds = (data ?? []).map((row) => row.store_id);
@@ -136,6 +144,13 @@ export async function fetchSearchResults(
       .order("store_id", { ascending: true });
 
     if (error) {
+      logSupabaseError({
+        route: "/search",
+        operation: "fetchSearchResults.stores",
+        table: "stores",
+        error,
+        context: { area_id: validatedAreaId, dish_id: validatedDishId },
+      });
       throw new Error("検索結果（店舗一覧）の取得に失敗しました");
     }
 
@@ -162,6 +177,12 @@ export async function fetchSearchResults(
       .order("store_id", { ascending: true })
       .order("display_order", { ascending: true });
     if (error) {
+      logSupabaseError({
+        route: "/search",
+        operation: "fetchSearchResults.storeDishes",
+        table: "store_dishes",
+        error,
+      });
       throw new Error("検索結果（提供料理）の取得に失敗しました");
     }
     return data ?? [];
@@ -180,6 +201,12 @@ export async function fetchSearchResults(
         .order("display_order", { ascending: true });
 
       if (error) {
+        logSupabaseError({
+          route: "/search",
+          operation: "fetchSearchResults.exteriorPhotos",
+          table: "store_photos",
+          error,
+        });
         throw new Error("検索結果（店舗写真）の取得に失敗しました");
       }
 
@@ -202,6 +229,13 @@ export async function fetchSearchResults(
         .order("display_order", { ascending: true });
 
       if (error) {
+        logSupabaseError({
+          route: "/search",
+          operation: "fetchSearchResults.dishPhotos",
+          table: "store_photos",
+          error,
+          context: { dish_id: validatedDishId },
+        });
         throw new Error("検索結果（料理写真）の取得に失敗しました");
       }
 
@@ -246,6 +280,12 @@ export async function fetchSearchResults(
       .select("dish_id, dish_name")
       .in("dish_id", dishIdsInResults);
     if (error) {
+      logSupabaseError({
+        route: "/search",
+        operation: "fetchSearchResults.dishNames",
+        table: "dishes",
+        error,
+      });
       throw new Error("検索結果（料理名）の取得に失敗しました");
     }
     dishNameById = new Map(

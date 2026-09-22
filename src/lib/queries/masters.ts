@@ -2,6 +2,7 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { supabase } from "@/lib/supabase";
+import { logSupabaseError } from "@/lib/logger";
 import { U01_DISH_NAMES } from "@/lib/search-conditions";
 import type { Database } from "@/types/database.types";
 
@@ -30,6 +31,12 @@ async function fetchActiveAreas(): Promise<MasterArea[]> {
     .order("display_order");
 
   if (error) {
+    logSupabaseError({
+      route: "masters",
+      operation: "fetchActiveAreas",
+      table: "areas",
+      error,
+    });
     throw new Error("マスタ（エリア）の取得に失敗しました");
   }
 
@@ -47,6 +54,12 @@ async function fetchActiveU01Dishes(): Promise<MasterDish[]> {
     .order("display_order");
 
   if (error) {
+    logSupabaseError({
+      route: "masters",
+      operation: "fetchActiveU01Dishes",
+      table: "dishes",
+      error,
+    });
     throw new Error("マスタ（料理）の取得に失敗しました");
   }
 
