@@ -65,35 +65,41 @@ export async function fetchSearchResults(
 ): Promise<SearchQueryResult> {
   const { areaId, time, scene, dishId } = conditions;
 
+  // areas取得とdishes取得（検索条件検証用）は互いの結果に依存しないため並列実行する。
+  const [areaData, dishData] = await Promise.all([
+    areaId !== null
+      ? supabase
+          .from("areas")
+          .select("area_name")
+          .eq("area_id", areaId)
+          .eq("is_active", true)
+          .maybeSingle()
+          .then(({ data }) => data)
+      : Promise.resolve(null),
+    dishId !== null
+      ? supabase
+          .from("dishes")
+          .select("dish_name")
+          .eq("dish_id", dishId)
+          .eq("is_active", true)
+          .in("dish_name", U01_DISH_NAMES)
+          .maybeSingle()
+          .then(({ data }) => data)
+      : Promise.resolve(null),
+  ]);
+
   let areaName: string | null = null;
   let validatedAreaId: number | null = null;
-  if (areaId !== null) {
-    const { data } = await supabase
-      .from("areas")
-      .select("area_name")
-      .eq("area_id", areaId)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (data) {
-      areaName = data.area_name;
-      validatedAreaId = areaId;
-    }
+  if (areaData) {
+    areaName = areaData.area_name;
+    validatedAreaId = areaId;
   }
 
   let dishName: string | null = null;
   let validatedDishId: number | null = null;
-  if (dishId !== null) {
-    const { data } = await supabase
-      .from("dishes")
-      .select("dish_name")
-      .eq("dish_id", dishId)
-      .eq("is_active", true)
-      .in("dish_name", U01_DISH_NAMES)
-      .maybeSingle();
-    if (data) {
-      dishName = data.dish_name;
-      validatedDishId = dishId;
-    }
+  if (dishData) {
+    dishName = dishData.dish_name;
+    validatedDishId = dishId;
   }
 
   let matchedStoreIds: number[] | null = null;
@@ -150,8 +156,10 @@ export async function fetchSearchResults(
     display_order: number;
   };
 
-  let storeDishRows: StoreDishRow[] = [];
-  if (storeIds.length > 0) {
+  async function fetchStoreDishRows(): Promise<StoreDishRow[]> {
+    if (storeIds.length === 0) {
+      return [];
+    }
     const { data } = await supabase
       .from("store_dishes")
       .select("store_id, dish_id, display_order")
@@ -159,8 +167,68 @@ export async function fetchSearchResults(
       .eq("is_available", true)
       .order("store_id", { ascending: true })
       .order("display_order", { ascending: true });
-    storeDishRows = data ?? [];
+    return data ?? [];
   }
+
+  async function fetchPhotoByStore(): Promise<Map<number, StorePhoto>> {
+    const photoByStore = new Map<number, StorePhoto>();
+    if (storeIds.length > 0 && validatedDishId === null) {
+      // 料理「すべて」選択時は料理画像を使わず、店舗の外観画像を表示する。
+      const { data } = await supabase
+        .from("store_photos")
+        .select("store_id, photo_url, alt_text, display_order")
+        .in("store_id", storeIds)
+        .eq("photo_type", "外観")
+        .order("store_id", { ascending: true })
+        .order("display_order", { ascending: true });
+
+      for (const row of data ?? []) {
+        if (!photoByStore.has(row.store_id)) {
+          photoByStore.set(row.store_id, {
+            photoUrl: row.photo_url,
+            altText: row.alt_text,
+          });
+        }
+      }
+    } else if (storeIds.length > 0 && validatedDishId !== null) {
+      const { data } = await supabase
+        .from("store_photos")
+        .select("store_id, dish_id, photo_url, alt_text, display_order")
+        .in("store_id", storeIds)
+        .eq("photo_type", "料理")
+        .eq("dish_id", validatedDishId)
+        .order("store_id", { ascending: true })
+        .order("display_order", { ascending: true });
+
+      // 選択中の dish_id と一致する写真だけを候補にし、他の料理画像では代用しない。
+      const candidatesByStore = new Map<number, StorePhoto[]>();
+      for (const row of data ?? []) {
+        const photo = { photoUrl: row.photo_url, altText: row.alt_text };
+        const list = candidatesByStore.get(row.store_id) ?? [];
+        list.push(photo);
+        candidatesByStore.set(row.store_id, list);
+      }
+
+      for (const storeId of storeIds) {
+        const candidates = candidatesByStore.get(storeId) ?? [];
+        const u02Photo = candidates.find((photo) =>
+          photo.photoUrl.includes("-u02-"),
+        );
+        const photo = u02Photo ?? candidates[0];
+        if (photo) {
+          photoByStore.set(storeId, photo);
+        }
+      }
+    }
+    return photoByStore;
+  }
+
+  // store_dishes（表示用）とstore_photosはどちらもstoreIds確定後に取得するだけで、
+  // 互いの結果には依存しないため並列実行する。
+  const [storeDishRows, photoByStore] = await Promise.all([
+    fetchStoreDishRows(),
+    fetchPhotoByStore(),
+  ]);
 
   const dishIdsInResults = Array.from(
     new Set(storeDishRows.map((row) => row.dish_id)),
@@ -186,56 +254,6 @@ export async function fetchSearchResults(
       display_order: row.display_order,
     });
     dishesByStore.set(row.store_id, list);
-  }
-
-  const photoByStore = new Map<number, StorePhoto>();
-  if (storeIds.length > 0 && validatedDishId === null) {
-    // 料理「すべて」選択時は料理画像を使わず、店舗の外観画像を表示する。
-    const { data } = await supabase
-      .from("store_photos")
-      .select("store_id, photo_url, alt_text, display_order")
-      .in("store_id", storeIds)
-      .eq("photo_type", "外観")
-      .order("store_id", { ascending: true })
-      .order("display_order", { ascending: true });
-
-    for (const row of data ?? []) {
-      if (!photoByStore.has(row.store_id)) {
-        photoByStore.set(row.store_id, {
-          photoUrl: row.photo_url,
-          altText: row.alt_text,
-        });
-      }
-    }
-  } else if (storeIds.length > 0 && validatedDishId !== null) {
-    const { data } = await supabase
-      .from("store_photos")
-      .select("store_id, dish_id, photo_url, alt_text, display_order")
-      .in("store_id", storeIds)
-      .eq("photo_type", "料理")
-      .eq("dish_id", validatedDishId)
-      .order("store_id", { ascending: true })
-      .order("display_order", { ascending: true });
-
-    // 選択中の dish_id と一致する写真だけを候補にし、他の料理画像では代用しない。
-    const candidatesByStore = new Map<number, StorePhoto[]>();
-    for (const row of data ?? []) {
-      const photo = { photoUrl: row.photo_url, altText: row.alt_text };
-      const list = candidatesByStore.get(row.store_id) ?? [];
-      list.push(photo);
-      candidatesByStore.set(row.store_id, list);
-    }
-
-    for (const storeId of storeIds) {
-      const candidates = candidatesByStore.get(storeId) ?? [];
-      const u02Photo = candidates.find((photo) =>
-        photo.photoUrl.includes("-u02-"),
-      );
-      const photo = u02Photo ?? candidates[0];
-      if (photo) {
-        photoByStore.set(storeId, photo);
-      }
-    }
   }
 
   return {
