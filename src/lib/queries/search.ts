@@ -74,7 +74,12 @@ export async function fetchSearchResults(
           .eq("area_id", areaId)
           .eq("is_active", true)
           .maybeSingle()
-          .then(({ data }) => data)
+          .then(({ data, error }) => {
+            if (error) {
+              throw new Error("検索条件（エリア）の取得に失敗しました");
+            }
+            return data;
+          })
       : Promise.resolve(null),
     dishId !== null
       ? supabase
@@ -84,7 +89,12 @@ export async function fetchSearchResults(
           .eq("is_active", true)
           .in("dish_name", U01_DISH_NAMES)
           .maybeSingle()
-          .then(({ data }) => data)
+          .then(({ data, error }) => {
+            if (error) {
+              throw new Error("検索条件（料理）の取得に失敗しました");
+            }
+            return data;
+          })
       : Promise.resolve(null),
   ]);
 
@@ -104,11 +114,14 @@ export async function fetchSearchResults(
 
   let matchedStoreIds: number[] | null = null;
   if (validatedDishId !== null) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("store_dishes")
       .select("store_id")
       .eq("dish_id", validatedDishId)
       .eq("is_available", true);
+    if (error) {
+      throw new Error("検索結果（該当店舗）の取得に失敗しました");
+    }
     matchedStoreIds = (data ?? []).map((row) => row.store_id);
   }
 
@@ -141,9 +154,13 @@ export async function fetchSearchResults(
       query = query.in("store_id", matchedStoreIds);
     }
 
-    const { data } = await query
+    const { data, error } = await query
       .order("walk_minutes", { ascending: true })
       .order("store_id", { ascending: true });
+
+    if (error) {
+      throw new Error("検索結果（店舗一覧）の取得に失敗しました");
+    }
 
     stores = data ?? [];
   }
@@ -160,13 +177,16 @@ export async function fetchSearchResults(
     if (storeIds.length === 0) {
       return [];
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("store_dishes")
       .select("store_id, dish_id, display_order")
       .in("store_id", storeIds)
       .eq("is_available", true)
       .order("store_id", { ascending: true })
       .order("display_order", { ascending: true });
+    if (error) {
+      throw new Error("検索結果（提供料理）の取得に失敗しました");
+    }
     return data ?? [];
   }
 
@@ -174,13 +194,17 @@ export async function fetchSearchResults(
     const photoByStore = new Map<number, StorePhoto>();
     if (storeIds.length > 0 && validatedDishId === null) {
       // 料理「すべて」選択時は料理画像を使わず、店舗の外観画像を表示する。
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("store_photos")
         .select("store_id, photo_url, alt_text, display_order")
         .in("store_id", storeIds)
         .eq("photo_type", "外観")
         .order("store_id", { ascending: true })
         .order("display_order", { ascending: true });
+
+      if (error) {
+        throw new Error("検索結果（店舗写真）の取得に失敗しました");
+      }
 
       for (const row of data ?? []) {
         if (!photoByStore.has(row.store_id)) {
@@ -191,7 +215,7 @@ export async function fetchSearchResults(
         }
       }
     } else if (storeIds.length > 0 && validatedDishId !== null) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("store_photos")
         .select("store_id, dish_id, photo_url, alt_text, display_order")
         .in("store_id", storeIds)
@@ -199,6 +223,10 @@ export async function fetchSearchResults(
         .eq("dish_id", validatedDishId)
         .order("store_id", { ascending: true })
         .order("display_order", { ascending: true });
+
+      if (error) {
+        throw new Error("検索結果（料理写真）の取得に失敗しました");
+      }
 
       // 選択中の dish_id と一致する写真だけを候補にし、他の料理画像では代用しない。
       const candidatesByStore = new Map<number, StorePhoto[]>();
@@ -236,10 +264,13 @@ export async function fetchSearchResults(
 
   let dishNameById = new Map<number, string>();
   if (dishIdsInResults.length > 0) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("dishes")
       .select("dish_id, dish_name")
       .in("dish_id", dishIdsInResults);
+    if (error) {
+      throw new Error("検索結果（料理名）の取得に失敗しました");
+    }
     dishNameById = new Map(
       (data ?? []).map((row) => [row.dish_id, row.dish_name]),
     );
