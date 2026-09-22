@@ -16,11 +16,7 @@ export type MasterArea = Pick<
 
 export type MasterDish = Pick<
   DishRow,
-  | "dish_id"
-  | "dish_name"
-  | "description"
-  | "search_image_url"
-  | "display_order"
+  "dish_id" | "dish_name" | "description" | "search_image_url" | "display_order"
 >;
 
 async function fetchActiveAreas(): Promise<MasterArea[]> {
@@ -46,9 +42,7 @@ async function fetchActiveAreas(): Promise<MasterArea[]> {
 async function fetchActiveU01Dishes(): Promise<MasterDish[]> {
   const { data, error } = await supabase
     .from("dishes")
-    .select(
-      "dish_id, dish_name, description, search_image_url, display_order",
-    )
+    .select("dish_id, dish_name, description, search_image_url, display_order")
     .eq("is_active", true)
     .in("dish_name", U01_DISH_NAMES)
     .order("display_order");

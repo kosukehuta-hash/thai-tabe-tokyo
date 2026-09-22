@@ -8,3 +8,5 @@ docs/reference/
 初期データ/
 CLAUDE.md
 README.md
+src/types/database.types.ts
+supabase/.temp/
