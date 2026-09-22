@@ -92,25 +92,26 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   }
 
   const store = result.store;
-  const photoResult = await fetchExteriorPhoto(store.store_id);
-  const interiorPhotosResult = await fetchInteriorPhotos(store.store_id);
-  const mainDishesResult = await fetchMainDishes(store.store_id);
   const sceneLabels = buildSceneLabels(store);
 
   const supabaseServer = await createServerSupabaseClient();
-  const { data: claimsData } = await supabaseServer.auth.getClaims();
-  const currentUserId = claimsData?.claims.sub ?? null;
 
-  const ownNoteResult =
-    currentUserId !== null
-      ? await fetchOwnNote(supabaseServer, store.store_id)
-      : null;
+  // 外観写真・店内写真・主要料理・認証claimsはstore_idのみ（または無関係）に依存し、
+  // 互いの結果を参照しないため並列実行する。
+  const [photoResult, interiorPhotosResult, mainDishesResult, claimsResult] =
+    await Promise.all([
+      fetchExteriorPhoto(store.store_id),
+      fetchInteriorPhotos(store.store_id),
+      fetchMainDishes(store.store_id),
+      supabaseServer.auth.getClaims(),
+    ]);
+
+  const currentUserId = claimsResult.data?.claims.sub ?? null;
 
   if (
     photoResult.status === "error" ||
     interiorPhotosResult.status === "error" ||
-    mainDishesResult.status === "error" ||
-    ownNoteResult?.status === "error"
+    mainDishesResult.status === "error"
   ) {
     return renderComError();
   }
@@ -118,18 +119,27 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   const interiorPhotos = interiorPhotosResult.photos;
   const mainDishes = mainDishesResult.dishes;
 
-  const dishPhotosResult =
+  // 自分のメモ取得と料理写真取得は、それぞれ上記の結果（currentUserId／mainDishes）にのみ
+  // 依存し、互いの結果を参照しないため並列実行する。
+  const [ownNoteResult, dishPhotosResult] = await Promise.all([
+    currentUserId !== null
+      ? fetchOwnNote(supabaseServer, store.store_id)
+      : Promise.resolve(null),
     mainDishes.length > 0
-      ? await fetchMainDishPhotos(
+      ? fetchMainDishPhotos(
           store.store_id,
           mainDishes.map((dish) => dish.dish_id),
         )
-      : {
+      : Promise.resolve({
           status: "success" as const,
           photoByDishId: new Map<number, StorePhoto>(),
-        };
+        }),
+  ]);
 
-  if (dishPhotosResult.status === "error") {
+  if (
+    ownNoteResult?.status === "error" ||
+    dishPhotosResult.status === "error"
+  ) {
     return renderComError();
   }
 
