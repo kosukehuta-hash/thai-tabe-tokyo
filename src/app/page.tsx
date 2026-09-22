@@ -1,20 +1,18 @@
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
 import { AuthStatus } from "@/components/AuthStatus";
-import { parseSearchConditions, U01_DISH_NAMES } from "@/lib/search-conditions";
+import { parseSearchConditions } from "@/lib/search-conditions";
+import {
+  getActiveAreas,
+  getActiveU01Dishes,
+  type MasterArea,
+  type MasterDish,
+} from "@/lib/queries/masters";
 import SearchForm from "./SearchForm";
 import styles from "./page.module.css";
-import type { Database } from "@/types/database.types";
 
-type AreaRow = Database["public"]["Tables"]["areas"]["Row"];
-type DishRow = Database["public"]["Tables"]["dishes"]["Row"];
+export type Area = MasterArea;
 
-export type Area = Pick<AreaRow, "area_id" | "area_name" | "display_order">;
-
-export type Dish = Pick<
-  DishRow,
-  "dish_id" | "dish_name" | "description" | "search_image_url" | "display_order"
->;
+export type Dish = MasterDish;
 
 export default async function Home(props: PageProps<"/">) {
   const rawSearchParams = await props.searchParams;
@@ -26,25 +24,10 @@ export default async function Home(props: PageProps<"/">) {
 
   const { areaId, time, scene, dishId } = parseSearchConditions(getParam);
 
-  const [areasResult, dishesResult] = await Promise.all([
-    supabase
-      .from("areas")
-      .select("area_id, area_name, display_order")
-      .eq("is_active", true)
-      .order("display_order"),
-    supabase
-      .from("dishes")
-      .select(
-        "dish_id, dish_name, description, search_image_url, display_order",
-      )
-      .eq("is_active", true)
-      .in("dish_name", U01_DISH_NAMES)
-      .order("display_order"),
+  const [areas, dishes] = await Promise.all([
+    getActiveAreas(),
+    getActiveU01Dishes(),
   ]);
-
-  const hasFetchError = Boolean(areasResult.error || dishesResult.error);
-  const areas = areasResult.data ?? [];
-  const dishes = dishesResult.data ?? [];
 
   const initialAreaId =
     areaId !== null && areas.some((area) => area.area_id === areaId)
@@ -102,20 +85,14 @@ export default async function Home(props: PageProps<"/">) {
       </div>
 
       <main className={styles.searchSection}>
-        {hasFetchError ? (
-          <p className={styles.status}>
-            情報を取得できませんでした。もう一度お試しください
-          </p>
-        ) : (
-          <SearchForm
-            areas={areas}
-            dishes={dishes}
-            initialAreaId={initialAreaId}
-            initialTime={time}
-            initialScene={scene}
-            initialDishId={initialDishId}
-          />
-        )}
+        <SearchForm
+          areas={areas}
+          dishes={dishes}
+          initialAreaId={initialAreaId}
+          initialTime={time}
+          initialScene={scene}
+          initialDishId={initialDishId}
+        />
       </main>
     </div>
   );
