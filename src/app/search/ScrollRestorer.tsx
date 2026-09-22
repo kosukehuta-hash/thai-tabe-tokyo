@@ -1,14 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
+import { toSearchParams, type SearchConditions } from "@/lib/search-conditions";
 
-const SCROLL_STORAGE_KEY = "thai-tabe-tokyo:search-scroll-y";
+const SCROLL_STORAGE_KEY_PREFIX = "thai-tabe-tokyo:search-scroll-y:";
 
-export default function ScrollRestorer() {
+type ScrollRestorerProps = {
+  searchConditions: SearchConditions;
+};
+
+export default function ScrollRestorer({
+  searchConditions,
+}: ScrollRestorerProps) {
   useEffect(() => {
+    const scrollKey =
+      SCROLL_STORAGE_KEY_PREFIX + toSearchParams(searchConditions).toString();
+
     let raw: string | null;
     try {
-      raw = sessionStorage.getItem(SCROLL_STORAGE_KEY);
+      raw = sessionStorage.getItem(scrollKey);
     } catch {
       return;
     }
@@ -27,11 +37,11 @@ export default function ScrollRestorer() {
     }
 
     try {
-      sessionStorage.removeItem(SCROLL_STORAGE_KEY);
+      sessionStorage.removeItem(scrollKey);
     } catch {
       // ignore
     }
-  }, []);
+  }, [searchConditions]);
 
   return null;
 }
