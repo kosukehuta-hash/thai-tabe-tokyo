@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import AiImageBadge from "@/components/AiImageBadge";
 import type { MainDish, StorePhoto } from "@/lib/queries/store";
 
 type StoreDishGridProps = {
@@ -29,13 +30,16 @@ export default function StoreDishGrid({
             <div key={dish.dish_id} className={styles.dishCard}>
               <div className={styles.dishPhotoArea}>
                 {dishPhoto ? (
-                  <Image
-                    src={dishPhoto.photo_url}
-                    alt={dishPhoto.alt_text}
-                    fill
-                    sizes="(max-width: 767px) 50vw, 33vw"
-                    className={styles.photo}
-                  />
+                  <>
+                    <Image
+                      src={dishPhoto.photo_url}
+                      alt={dishPhoto.alt_text}
+                      fill
+                      sizes="(max-width: 767px) 50vw, 33vw"
+                      className={styles.photo}
+                    />
+                    <AiImageBadge />
+                  </>
                 ) : (
                   <span className={styles.photoPlaceholderText}>
                     料理写真準備中

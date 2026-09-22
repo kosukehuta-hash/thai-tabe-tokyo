@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import AiImageBadge from "@/components/AiImageBadge";
 import StoreDetailLink from "./StoreDetailLink";
 import {
   ForkKnifeIcon,
@@ -38,22 +39,25 @@ export default function StoreCard({
     <div className={styles.card}>
       <div className={styles.photoWrapper}>
         {store.photo ? (
-          <Image
-            src={store.photo.photoUrl}
-            alt={store.photo.altText ?? store.store_name}
-            fill
-            sizes="(max-width: 767px) 100vw, 33vw"
-            className={styles.photo}
-            style={
-              !isDishSelected
-                ? {
-                    objectPosition:
-                      EXTERIOR_PHOTO_POSITION_BY_STORE[store.store_id] ??
-                      "center",
-                  }
-                : undefined
-            }
-          />
+          <>
+            <Image
+              src={store.photo.photoUrl}
+              alt={store.photo.altText ?? store.store_name}
+              fill
+              sizes="(max-width: 767px) 100vw, 33vw"
+              className={styles.photo}
+              style={
+                !isDishSelected
+                  ? {
+                      objectPosition:
+                        EXTERIOR_PHOTO_POSITION_BY_STORE[store.store_id] ??
+                        "center",
+                    }
+                  : undefined
+              }
+            />
+            <AiImageBadge />
+          </>
         ) : (
           <div className={styles.photoPlaceholder}>
             {!isDishSelected ? "店舗写真準備中" : "料理写真準備中"}

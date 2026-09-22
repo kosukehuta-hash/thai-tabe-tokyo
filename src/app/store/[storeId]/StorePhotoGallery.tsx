@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import AiImageBadge from "@/components/AiImageBadge";
 import type { PhotoFetchResult, StorePhoto } from "@/lib/queries/store";
 
 type StorePhotoGalleryProps = {
@@ -15,13 +16,16 @@ export default function StorePhotoGallery({
     <div className={styles.photoRow}>
       <div className={styles.photoArea}>
         {exteriorPhoto.status === "found" ? (
-          <Image
-            src={exteriorPhoto.photo.photo_url}
-            alt={exteriorPhoto.photo.alt_text}
-            fill
-            sizes="(max-width: 767px) 100vw, 45vw"
-            className={styles.photo}
-          />
+          <>
+            <Image
+              src={exteriorPhoto.photo.photo_url}
+              alt={exteriorPhoto.photo.alt_text}
+              fill
+              sizes="(max-width: 767px) 100vw, 45vw"
+              className={styles.photo}
+            />
+            <AiImageBadge />
+          </>
         ) : (
           <span className={styles.photoPlaceholderText}>店舗写真準備中</span>
         )}
@@ -38,6 +42,7 @@ export default function StorePhotoGallery({
                 sizes="(max-width: 767px) 100vw, 50vw"
                 className={styles.photo}
               />
+              <AiImageBadge />
             </div>
           ))}
         </div>
