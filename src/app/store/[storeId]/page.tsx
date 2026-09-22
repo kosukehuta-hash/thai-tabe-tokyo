@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthStatus } from "@/components/AuthStatus";
 import { StoreVisitNote } from "@/components/StoreVisitNote";
@@ -7,7 +8,7 @@ import StoreBasicInfo from "./StoreBasicInfo";
 import StoreDishGrid from "./StoreDishGrid";
 import StoreInfoRows from "./StoreInfoRows";
 import StorePhotoGallery from "./StorePhotoGallery";
-import { StoreErrorMessage, StoreNotFoundMessage } from "./StoreStatusMessages";
+import { StoreErrorMessage } from "./StoreStatusMessages";
 import styles from "./page.module.css";
 import {
   buildSearchHref,
@@ -80,7 +81,7 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
     : `/store/${rawStoreId}`;
 
   if (result.status === "invalid_id" || result.status === "not_found") {
-    return <StoreNotFoundMessage backToSearchHref={backToSearchHref} />;
+    notFound();
   }
 
   const renderComError = () => (
