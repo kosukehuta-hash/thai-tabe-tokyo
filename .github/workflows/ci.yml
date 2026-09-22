@@ -30,6 +30,8 @@ jobs:
         run: npm run lint
 
       - name: Generate Next.js types
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
         run: npx next typegen
 
       - name: Typecheck
