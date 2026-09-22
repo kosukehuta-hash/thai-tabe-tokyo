@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabase } from "@/lib/supabase";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
+import { logSupabaseError } from "@/lib/logger";
 import type { Database } from "@/types/database.types";
 
 type StoreRow = Database["public"]["Tables"]["stores"]["Row"];
@@ -53,6 +54,13 @@ export async function fetchStore(storeId: number): Promise<StoreFetchResult> {
     .maybeSingle();
 
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchStore",
+      table: "stores",
+      error,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
   if (!data) {
@@ -84,6 +92,13 @@ export async function fetchExteriorPhoto(
     .maybeSingle();
 
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchExteriorPhoto",
+      table: "store_photos",
+      error,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
   if (!data) {
@@ -106,6 +121,13 @@ export async function fetchInteriorPhotos(
     .order("display_order", { ascending: true });
 
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchInteriorPhotos",
+      table: "store_photos",
+      error,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
   return { status: "success", photos: (data ?? []).slice(0, 2) };
@@ -132,6 +154,13 @@ export async function fetchMainDishes(
     .limit(6);
 
   if (storeDishError) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchMainDishes.storeDishes",
+      table: "store_dishes",
+      error: storeDishError,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
 
@@ -148,6 +177,13 @@ export async function fetchMainDishes(
     .in("dish_id", dishIds);
 
   if (dishError) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchMainDishes.dishes",
+      table: "dishes",
+      error: dishError,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
 
@@ -195,6 +231,13 @@ export async function fetchMainDishPhotos(
     .order("display_order", { ascending: true });
 
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchMainDishPhotos",
+      table: "store_photos",
+      error,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
 
@@ -226,6 +269,13 @@ export async function fetchOwnNote(
     .maybeSingle();
 
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "fetchOwnNote",
+      table: "store_visit_notes",
+      error,
+      context: { store_id: storeId },
+    });
     return { status: "error" };
   }
   return { status: "success", noteText: data?.note_text ?? null };

@@ -1,0 +1,28 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 60vh;
+  padding: 24px;
+  text-align: center;
+}
+
+.message {
+  color: #333;
+  font-size: 15px;
+}
+
+.retryButton {
+  margin-top: 16px;
+  height: 42px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #b65c1f;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}

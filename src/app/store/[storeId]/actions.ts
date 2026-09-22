@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logSupabaseError } from "@/lib/logger";
 
 export type SaveNoteState = {
   error: string | null;
@@ -62,6 +63,15 @@ export async function saveNote(
     await supabase.auth.getClaims();
   const userId = claimsData?.claims.sub;
   if (claimsError || !userId) {
+    if (claimsError) {
+      logSupabaseError({
+        event: "supabase_auth_error",
+        route: "/store/[storeId]",
+        operation: "saveNote.getClaims",
+        table: "auth",
+        error: claimsError,
+      });
+    }
     return { error: AUTH_ERROR_MESSAGE, noteText: null };
   }
 
@@ -72,6 +82,13 @@ export async function saveNote(
       { onConflict: "user_id,store_id" },
     );
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "saveNote.upsert",
+      table: "store_visit_notes",
+      error,
+      context: { store_id: storeId },
+    });
     return { error: SAVE_ERROR_MESSAGE, noteText: null };
   }
 
@@ -94,6 +111,15 @@ export async function deleteNote(
     await supabase.auth.getClaims();
   const userId = claimsData?.claims.sub;
   if (claimsError || !userId) {
+    if (claimsError) {
+      logSupabaseError({
+        event: "supabase_auth_error",
+        route: "/store/[storeId]",
+        operation: "deleteNote.getClaims",
+        table: "auth",
+        error: claimsError,
+      });
+    }
     return { error: AUTH_ERROR_MESSAGE, deleted: false };
   }
 
@@ -103,6 +129,13 @@ export async function deleteNote(
     .eq("user_id", userId)
     .eq("store_id", storeId);
   if (error) {
+    logSupabaseError({
+      route: "/store/[storeId]",
+      operation: "deleteNote.delete",
+      table: "store_visit_notes",
+      error,
+      context: { store_id: storeId },
+    });
     return { error: DELETE_ERROR_MESSAGE, deleted: false };
   }
 
