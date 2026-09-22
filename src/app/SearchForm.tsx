@@ -8,6 +8,7 @@ import {
   type SceneValue,
   type TimeValue,
 } from "@/lib/search-conditions";
+import AiImageBadge from "@/components/AiImageBadge";
 import type { Area, Dish } from "./page";
 import styles from "./page.module.css";
 
@@ -282,13 +283,16 @@ export default function SearchForm({
               >
                 <span className={styles.dishImageWrapper}>
                   {dish.search_image_url && (
-                    <Image
-                      src={dish.search_image_url}
-                      alt={dish.dish_name}
-                      fill
-                      sizes="(max-width: 767px) 45vw, 220px"
-                      className={styles.dishImage}
-                    />
+                    <>
+                      <Image
+                        src={dish.search_image_url}
+                        alt={dish.dish_name}
+                        fill
+                        sizes="(max-width: 767px) 45vw, 220px"
+                        className={styles.dishImage}
+                      />
+                      <AiImageBadge />
+                    </>
                   )}
                   {selectedDishId === dish.dish_id && (
                     <span className={styles.dishCheck}>
@@ -318,6 +322,7 @@ export default function SearchForm({
                   sizes="(max-width: 767px) 45vw, 220px"
                   className={styles.dishImage}
                 />
+                <AiImageBadge />
                 {selectedDishId === null && (
                   <span className={styles.dishCheck}>
                     <CheckIcon />
