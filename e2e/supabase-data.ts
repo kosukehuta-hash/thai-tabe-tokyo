@@ -21,9 +21,14 @@ export type PublishedStore = {
 
 export type MasterArea = { area_id: number; area_name: string };
 
-function readEnvLocal(): { url: string; key: string } {
+function readEnvLocalFile(): Record<string, string> {
   const envPath = path.resolve(__dirname, "../.env.local");
-  const content = readFileSync(envPath, "utf-8");
+  let content: string;
+  try {
+    content = readFileSync(envPath, "utf-8");
+  } catch {
+    return {};
+  }
   const vars: Record<string, string> = {};
   for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -36,18 +41,33 @@ function readEnvLocal(): { url: string; key: string } {
     }
     vars[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim();
   }
-  const url = vars["NEXT_PUBLIC_SUPABASE_URL"];
-  const key = vars["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
+  return vars;
+}
+
+/**
+ * GitHub Actionsではprocess.env（Secrets経由）を最優先で使用し、
+ * ローカル開発では.env.localへフォールバックする。
+ * 値そのものはログに出力しない。
+ */
+function readSupabaseEnv(): { url: string; key: string } {
+  const fileVars = readEnvLocalFile();
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ??
+    fileVars["NEXT_PUBLIC_SUPABASE_URL"];
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    fileVars["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
   if (!url || !key) {
     throw new Error(
-      ".env.localにNEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEYが見つかりません",
+      "NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEYが見つかりません。" +
+        "process.env（CI）または.env.local（ローカル）のいずれかに設定してください。",
     );
   }
   return { url, key };
 }
 
 async function restGet<T>(queryPath: string): Promise<T> {
-  const { url, key } = readEnvLocal();
+  const { url, key } = readSupabaseEnv();
   const res = await fetch(`${url}/rest/v1/${queryPath}`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
