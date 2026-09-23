@@ -10,10 +10,12 @@ import {
   computeExpectedOtherDishName,
   computeExpectedMainDishText,
   fetchAllStorePhotos,
+  fetchPublishedStoreHours,
   type PublishedStore,
   type MasterArea,
   type StorePhotoRow,
 } from "./supabase-data";
+import { formatHoursForList, formatPriceForList } from "../src/lib/format";
 
 const GAPAO_DISH_ID = 1;
 const GAPAO_DISH_NAME = "ガパオ";
@@ -449,5 +451,79 @@ test.describe("U02 検索結果ページ", () => {
       matchedCard!.getByText("料理写真準備中", { exact: true }),
     ).toBeVisible();
     await expect(matchedCard!.locator("img")).toHaveCount(0);
+  });
+
+  test("TC-U02-10: 時間帯『すべて』のとき昼・夜の営業時間と価格が両方表示される", async ({
+    page,
+  }) => {
+    const hoursList = await fetchPublishedStoreHours();
+    const target = hoursList.find((s) => s.has_lunch && s.has_dinner);
+
+    expect(
+      target,
+      "事前条件が失われました: 昼・夜両方の営業データを持つ公開店舗が見つかりません",
+    ).toBeDefined();
+
+    const expectedLunchHours = formatHoursForList(target!.lunch_hours);
+    const expectedLunchPrice = formatPriceForList(target!.lunch_price_from);
+    const expectedDinnerHours = formatHoursForList(target!.dinner_hours);
+    const expectedDinnerPrice = formatPriceForList(target!.dinner_price_from);
+
+    expect(
+      expectedLunchHours,
+      "事前条件が失われました: 昼の営業時間が登録されていません",
+    ).not.toBeNull();
+    expect(
+      expectedDinnerHours,
+      "事前条件が失われました: 夜の営業時間が登録されていません",
+    ).not.toBeNull();
+
+    await page.goto("/search");
+
+    const links = page.getByRole("link", { name: "詳しく見る", exact: true });
+    const linkCount = await links.count();
+    let matchedCard: Locator | null = null;
+    for (let i = 0; i < linkCount; i += 1) {
+      const link = links.nth(i);
+      const storeId = extractStoreId(await link.getAttribute("href"));
+      if (storeId === target!.store_id) {
+        matchedCard = link.locator("xpath=ancestor::div[2]");
+        break;
+      }
+    }
+    expect(
+      matchedCard,
+      `事前条件が失われました: store_id=${target!.store_id}の検索結果カードが見つかりません`,
+    ).not.toBeNull();
+
+    // 「徒歩N分」のテキストを起点に、その次に続く兄弟div（昼夜の営業時間・価格エリア）を特定する。
+    const walkText = matchedCard!.getByText(/徒歩\d+分/);
+    const hoursRow = walkText.locator(
+      "xpath=ancestor::div[1]/following-sibling::div[1]",
+    );
+    const timeSlots = hoursRow.locator(":scope > span");
+    await expect(timeSlots).toHaveCount(2);
+
+    const lunchSlot = timeSlots.nth(0);
+    const dinnerSlot = timeSlots.nth(1);
+
+    const expectedLunchText = `${expectedLunchHours}${expectedLunchPrice ?? ""}`;
+    const expectedDinnerText = `${expectedDinnerHours}${expectedDinnerPrice ?? ""}`;
+
+    await expect(lunchSlot).toHaveText(expectedLunchText);
+    await expect(dinnerSlot).toHaveText(expectedDinnerText);
+
+    // SunIcon／MoonIcon相当のアイコン（svg）がそれぞれの枠に1つずつ表示されていることを確認する
+    // （アイコンの実際の色は目視確認に残す）。
+    await expect(lunchSlot.locator("svg")).toHaveCount(1);
+    await expect(dinnerSlot.locator("svg")).toHaveCount(1);
+
+    // SunIcon（circleを持ちpathを持たない）とMoonIcon（pathを持ちcircleを持たない）の
+    // マークアップの違いから、単なるsvgの存在ではなく昼夜で正しいアイコンが
+    // 使われていることまで確認する（src/components/SearchIcons.tsxの実装に対応）。
+    await expect(lunchSlot.locator("svg circle")).toHaveCount(1);
+    await expect(lunchSlot.locator("svg path")).toHaveCount(0);
+    await expect(dinnerSlot.locator("svg path")).toHaveCount(1);
+    await expect(dinnerSlot.locator("svg circle")).toHaveCount(0);
   });
 });

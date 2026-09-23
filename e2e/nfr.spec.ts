@@ -140,4 +140,34 @@ test.describe("TC-NFR-04 操作性・アクセシビリティ", () => {
       1,
     );
   });
+
+  test('TC-NFR-03: 店舗写真のimgはloading="lazy"で遅延読込される', async ({
+    page,
+  }) => {
+    // 実際にDOMを調査した結果、Next/Imageが出力する店舗写真のimgは
+    // 例外なくloading="lazy"を持つことを確認済み（ヘッダーロゴのみalt=""かつ
+    // loading属性なし＝priority表示のため、alt=""を除外して対象を絞り込む）。
+    const photos = await fetchAllStorePhotos();
+    expect(
+      photos.length,
+      "事前条件が失われました: 写真が登録されている公開店舗が見つかりません",
+    ).toBeGreaterThan(0);
+
+    await page.goto("/search");
+    await page.waitForLoadState("networkidle");
+
+    const storePhotoImgs = page.locator('img:not([alt=""])');
+    const count = await storePhotoImgs.count();
+    expect(
+      count,
+      "事前条件が失われました: 検索結果に写真付きのimgが見つかりません",
+    ).toBeGreaterThan(0);
+
+    const loadingValues = await storePhotoImgs.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("loading")),
+    );
+    for (const loading of loadingValues) {
+      expect(loading).toBe("lazy");
+    }
+  });
 });
