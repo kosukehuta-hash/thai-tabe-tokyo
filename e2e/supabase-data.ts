@@ -135,6 +135,61 @@ export function computeExpectedOtherDishName(
   return first ? (dishNameById.get(first.dish_id) ?? null) : null;
 }
 
+/** 店舗の提供中料理を表示順（display_order昇順）の料理名配列にする。 */
+export function getOrderedDishNames(
+  storeDishes: StoreDishRow[],
+  dishNameById: Map<number, string>,
+  storeId: number,
+): string[] {
+  return storeDishes
+    .filter((row) => row.store_id === storeId)
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((row) => dishNameById.get(row.dish_id))
+    .filter((name): name is string => name !== undefined);
+}
+
+/**
+ * src/app/search/page.tsx の mainDishText 計算（提供中料理のうち
+ * 表示順先頭maxCount件、「・」連結）をテスト側で再現する。
+ */
+export function computeExpectedMainDishText(
+  storeDishes: StoreDishRow[],
+  dishNameById: Map<number, string>,
+  storeId: number,
+  maxCount = 2,
+): string | null {
+  const names = getOrderedDishNames(storeDishes, dishNameById, storeId).slice(
+    0,
+    maxCount,
+  );
+  return names.length > 0 ? names.join("・") : null;
+}
+
+export type StoreLinks = {
+  store_id: number;
+  map_url: string;
+  official_site_url: string | null;
+};
+
+export async function fetchPublishedStoreLinks(): Promise<StoreLinks[]> {
+  return restGet<StoreLinks[]>(
+    "stores?select=store_id,map_url,official_site_url&is_published=eq.true",
+  );
+}
+
+export type StoreRegularHoliday = {
+  store_id: number;
+  regular_holiday: string | null;
+};
+
+export async function fetchPublishedStoreRegularHolidays(): Promise<
+  StoreRegularHoliday[]
+> {
+  return restGet<StoreRegularHoliday[]>(
+    "stores?select=store_id,regular_holiday&is_published=eq.true",
+  );
+}
+
 export type SceneValue = "solo" | "date" | "friends" | "family";
 
 const SCENE_COLUMN: Record<SceneValue, keyof PublishedStore> = {

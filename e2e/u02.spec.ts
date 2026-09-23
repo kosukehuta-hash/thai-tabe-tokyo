@@ -8,6 +8,7 @@ import {
   filterAndSortStores,
   findZeroResultAreaScene,
   computeExpectedOtherDishName,
+  computeExpectedMainDishText,
   type PublishedStore,
   type MasterArea,
 } from "./supabase-data";
@@ -328,5 +329,69 @@ test.describe("U02 検索結果ページ", () => {
     }
 
     expect(checkedAtLeastOne).toBe(true);
+  });
+
+  test("TC-U02-09: 主な料理は表示順で最大2件だけ表示される", async ({
+    page,
+  }) => {
+    const dishCountByStore = new Map<number, number>();
+    for (const row of storeDishes) {
+      dishCountByStore.set(
+        row.store_id,
+        (dishCountByStore.get(row.store_id) ?? 0) + 1,
+      );
+    }
+
+    // 3件以上の提供中料理を持つ公開店舗を動的に選ぶ
+    // （「3件以上あるのに画面では最大2件」まで確認するための前提条件）。
+    const targetStoreId = stores
+      .map((s) => s.store_id)
+      .find((id) => (dishCountByStore.get(id) ?? 0) >= 3);
+
+    expect(
+      targetStoreId,
+      "事前条件が失われました: 3件以上の提供中料理を持つ公開店舗が見つかりません",
+    ).toBeDefined();
+
+    const expectedMainDishText = computeExpectedMainDishText(
+      storeDishes,
+      dishNameById,
+      targetStoreId!,
+      2,
+    );
+    expect(
+      expectedMainDishText,
+      "事前条件が失われました: 期待される主な料理テキストを計算できません",
+    ).not.toBeNull();
+
+    await page.goto("/search");
+
+    const links = page.getByRole("link", { name: "詳しく見る", exact: true });
+    const linkCount = await links.count();
+
+    let matchedCardBody: Locator | null = null;
+    for (let i = 0; i < linkCount; i += 1) {
+      const link = links.nth(i);
+      const storeId = extractStoreId(await link.getAttribute("href"));
+      if (storeId === targetStoreId) {
+        matchedCardBody = getCardBodyForLink(link);
+        break;
+      }
+    }
+    expect(
+      matchedCardBody,
+      `事前条件が失われました: store_id=${targetStoreId}の検索結果カードが見つかりません`,
+    ).not.toBeNull();
+
+    const mainDishTexts = matchedCardBody!.getByText(/^主な料理：/);
+    await expect(mainDishTexts).toHaveText(`主な料理：${expectedMainDishText}`);
+
+    const displayedText = await mainDishTexts.textContent();
+    const dishNamesShown = displayedText!.replace("主な料理：", "").split("・");
+
+    // 表示は最大2件までであることを明示的に確認する。
+    expect(dishNamesShown.length).toBeLessThanOrEqual(2);
+    // DB上は3件以上登録されているのに、画面では2件までしか表示されないことを確認する。
+    expect(dishCountByStore.get(targetStoreId!)).toBeGreaterThanOrEqual(3);
   });
 });
