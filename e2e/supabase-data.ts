@@ -280,3 +280,50 @@ export function findZeroResultAreaScene(
   }
   return null;
 }
+
+export type StoreHours = {
+  store_id: number;
+  has_lunch: boolean;
+  lunch_hours: string | null;
+  lunch_price_from: number | null;
+  has_dinner: boolean;
+  dinner_hours: string | null;
+  dinner_price_from: number | null;
+};
+
+export async function fetchPublishedStoreHours(): Promise<StoreHours[]> {
+  return restGet<StoreHours[]>(
+    "stores?select=store_id,has_lunch,lunch_hours,lunch_price_from,has_dinner,dinner_hours,dinner_price_from&is_published=eq.true",
+  );
+}
+
+/**
+ * TC-SEC-03用：Publishable keyで「公開条件による絞り込みを指定せず」に取得する。
+ * RLSが正しく効いていれば、結果は常に公開可能な行だけに限定されるはずである。
+ * （supabase/migrations/20260909000200_enable_row_level_security.sqlのポリシーに対応）
+ */
+export type RawArea = { area_id: number; is_active: boolean };
+export async function fetchAllAreasUnfiltered(): Promise<RawArea[]> {
+  return restGet<RawArea[]>("areas?select=area_id,is_active");
+}
+
+export type RawDish = { dish_id: number; is_active: boolean };
+export async function fetchAllDishesUnfiltered(): Promise<RawDish[]> {
+  return restGet<RawDish[]>("dishes?select=dish_id,is_active");
+}
+
+export type RawStore = { store_id: number; is_published: boolean };
+export async function fetchAllStoresUnfiltered(): Promise<RawStore[]> {
+  return restGet<RawStore[]>("stores?select=store_id,is_published");
+}
+
+export type RawStoreDish = {
+  store_id: number;
+  dish_id: number;
+  is_available: boolean;
+};
+export async function fetchAllStoreDishesUnfiltered(): Promise<RawStoreDish[]> {
+  return restGet<RawStoreDish[]>(
+    "store_dishes?select=store_id,dish_id,is_available",
+  );
+}
