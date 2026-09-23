@@ -392,7 +392,7 @@
     position: relative;
     width: 100%;
     max-width: none;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px 6px;
   }
 
@@ -435,5 +435,33 @@
   .detailButton {
     min-height: 38px;
     font-size: 15px;
+  }
+}
+
+/* 1200px以上のPC幅だけ3列にする（768〜1199pxは直前のブロックの2列のまま） */
+@media (min-width: 1200px) {
+  .storeGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* スマホ幅は横型カード（左：写真、右：店舗情報）にする。
+   無条件の.card（flex-direction: column）より後ろに置く必要があるため、
+   ファイル末尾に配置する（CSS優先順位は同じセレクタなら記述順で決まるため）。 */
+@media (max-width: 767px) {
+  .card {
+    flex-direction: row;
+  }
+
+  .photoWrapper {
+    flex: 0 0 35%;
+    width: 35%;
+    aspect-ratio: 3 / 4;
+    border-radius: 12px 0 0 12px;
+  }
+
+  .cardBody {
+    flex: 1;
+    min-width: 0;
   }
 }
