@@ -72,6 +72,10 @@ test.describe("U01 トップページ 検索条件選択", () => {
 
     await clickUntilPressed(dinnerButton);
     await expect(lunchButton).toHaveAttribute("aria-pressed", "false");
+
+    // NF14: 選択状態は色だけでなく、チェックアイコン（svg）の有無でも判別できる
+    await expect(dinnerButton.locator("svg")).toHaveCount(1);
+    await expect(lunchButton.locator("svg")).toHaveCount(0);
   });
 
   test("TC-U01-03: 複数条件を選択後「条件をリセット」を押すと全カテゴリが「すべて」に戻る", async ({

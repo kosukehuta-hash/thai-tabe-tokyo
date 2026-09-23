@@ -9,8 +9,10 @@ import {
   findZeroResultAreaScene,
   computeExpectedOtherDishName,
   computeExpectedMainDishText,
+  fetchAllStorePhotos,
   type PublishedStore,
   type MasterArea,
+  type StorePhotoRow,
 } from "./supabase-data";
 
 const GAPAO_DISH_ID = 1;
@@ -65,6 +67,7 @@ test.describe("U02 検索結果ページ", () => {
   let gapaoStoreIds: number[];
   let storeDishes: Awaited<ReturnType<typeof fetchAvailableStoreDishes>>;
   let dishNameById: Map<number, string>;
+  let allPhotos: StorePhotoRow[];
 
   test.beforeAll(async () => {
     const [
@@ -73,18 +76,21 @@ test.describe("U02 検索結果ページ", () => {
       gapaoStoreIdsResult,
       storeDishesResult,
       dishesResult,
+      photosResult,
     ] = await Promise.all([
       fetchPublishedStores(),
       fetchActiveAreas(),
       fetchAvailableStoreIdsForDish(GAPAO_DISH_ID),
       fetchAvailableStoreDishes(),
       fetchDishes(),
+      fetchAllStorePhotos(),
     ]);
     stores = storesResult;
     areas = areasResult;
     gapaoStoreIds = gapaoStoreIdsResult;
     storeDishes = storeDishesResult;
     dishNameById = new Map(dishesResult.map((d) => [d.dish_id, d.dish_name]));
+    allPhotos = photosResult;
   });
 
   test("TC-U02-01: AND検索で4条件すべてに一致する店舗だけが表示される", async ({
@@ -393,5 +399,55 @@ test.describe("U02 検索結果ページ", () => {
     expect(dishNamesShown.length).toBeLessThanOrEqual(2);
     // DB上は3件以上登録されているのに、画面では2件までしか表示されないことを確認する。
     expect(dishCountByStore.get(targetStoreId!)).toBeGreaterThanOrEqual(3);
+  });
+
+  test("TC-COM-04（U02）: 料理写真が未登録の料理では『料理写真準備中』が表示され、写真は表示されない", async ({
+    page,
+  }) => {
+    let targetStoreId: number | undefined;
+    let targetDishId: number | undefined;
+    for (const row of storeDishes) {
+      const hasPhoto = allPhotos.some(
+        (p) =>
+          p.photo_type === "料理" &&
+          p.store_id === row.store_id &&
+          p.dish_id === row.dish_id,
+      );
+      if (!hasPhoto) {
+        targetStoreId = row.store_id;
+        targetDishId = row.dish_id;
+        break;
+      }
+    }
+
+    expect(
+      targetStoreId,
+      "事前条件が失われました: 料理写真が未登録の(店舗,料理)の組み合わせが見つかりません",
+    ).toBeDefined();
+
+    await page.goto(`/search?dish_id=${targetDishId}`);
+
+    const links = page.getByRole("link", { name: "詳しく見る", exact: true });
+    const linkCount = await links.count();
+    let matchedCard: Locator | null = null;
+    for (let i = 0; i < linkCount; i += 1) {
+      const link = links.nth(i);
+      const storeId = extractStoreId(await link.getAttribute("href"));
+      if (storeId === targetStoreId) {
+        // 写真エリア（photoWrapper）はcardBodyの兄弟要素で、
+        // Linkの2階層上（card全体）まで遡ることで両方をスコープに含める。
+        matchedCard = link.locator("xpath=ancestor::div[2]");
+        break;
+      }
+    }
+    expect(
+      matchedCard,
+      `事前条件が失われました: store_id=${targetStoreId}の検索結果カードが見つかりません`,
+    ).not.toBeNull();
+
+    await expect(
+      matchedCard!.getByText("料理写真準備中", { exact: true }),
+    ).toBeVisible();
+    await expect(matchedCard!.locator("img")).toHaveCount(0);
   });
 });
