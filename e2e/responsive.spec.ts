@@ -73,7 +73,7 @@ test.describe("TC-COM-01〜03 U02のレスポンシブ表示", () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test("TC-COM-02: 375〜767pxではU02の店舗カードが1列になり、カード内は写真が左・店舗情報が右になる", async ({
+  test("TC-COM-02: 375〜767pxではU02の店舗カードが1列になり、カード内は写真が上・店舗情報が下の縦積みになる", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
@@ -96,7 +96,7 @@ test.describe("TC-COM-01〜03 U02のレスポンシブ表示", () => {
       expect(positions[i].y).toBeGreaterThan(positions[i - 1].y);
     }
 
-    // カード内：写真（1つ目の子div）が左、情報（2つ目の子div）が右
+    // カード内：写真（1つ目の子div）が上、情報（2つ目の子div）が下の縦積み
     const firstLink = page
       .getByRole("link", { name: "詳しく見る", exact: true })
       .first();
@@ -111,7 +111,10 @@ test.describe("TC-COM-01〜03 U02のレスポンシブ表示", () => {
       infoBox,
       "事前条件が失われました: 情報エリアのboundingBoxが取得できません",
     ).not.toBeNull();
-    expect(photoBox!.x).toBeLessThan(infoBox!.x);
+    expect(photoBox!.y).toBeLessThan(infoBox!.y);
+
+    // 写真は横長16:9で、カード幅いっぱいに表示される
+    expect(photoBox!.width / photoBox!.height).toBeCloseTo(16 / 9, 1);
 
     await expectNoHorizontalScroll(page);
   });
