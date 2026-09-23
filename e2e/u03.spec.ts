@@ -5,9 +5,13 @@ import {
   fetchDishes,
   fetchPublishedStoreLinks,
   fetchPublishedStoreRegularHolidays,
+  fetchAllStorePhotos,
+  fetchPublishedStoreAtmosphere,
   getOrderedDishNames,
+  getPhotoTypesForStore,
   type PublishedStore,
   type StoreDishRow,
+  type StorePhotoRow,
 } from "./supabase-data";
 
 /** 「食べられる主な料理」見出しの兄弟要素として描画される料理グリッドのコンテナ。 */
@@ -28,16 +32,30 @@ test.describe("U03 店舗詳細ページ", () => {
   let stores: PublishedStore[];
   let storeDishes: StoreDishRow[];
   let dishNameById: Map<number, string>;
+  let allPhotos: StorePhotoRow[];
+  let atmosphereByStore: Map<number, string>;
 
   test.beforeAll(async () => {
-    const [storesResult, storeDishesResult, dishesResult] = await Promise.all([
+    const [
+      storesResult,
+      storeDishesResult,
+      dishesResult,
+      photosResult,
+      atmosphereResult,
+    ] = await Promise.all([
       fetchPublishedStores(),
       fetchAvailableStoreDishes(),
       fetchDishes(),
+      fetchAllStorePhotos(),
+      fetchPublishedStoreAtmosphere(),
     ]);
     stores = storesResult;
     storeDishes = storeDishesResult;
     dishNameById = new Map(dishesResult.map((d) => [d.dish_id, d.dish_name]));
+    allPhotos = photosResult;
+    atmosphereByStore = new Map(
+      atmosphereResult.map((s) => [s.store_id, s.atmosphere_text]),
+    );
   });
 
   test("TC-U03-01: 提供中料理が6件の店舗では6件すべてが表示順どおりに表示される", async ({
@@ -312,5 +330,99 @@ test.describe("U03 店舗詳細ページ", () => {
 
     // 最終確認日を含む共通注記は、空欄項目の有無に関わらず表示される
     await expect(page.getByText(/最終確認日：/)).toBeVisible();
+  });
+
+  test("TC-U03-06: 外観写真が未登録の店舗では『店舗写真準備中』が表示され、外観写真は表示されない", async ({
+    page,
+  }) => {
+    const targetStoreId = stores
+      .map((s) => s.store_id)
+      .find((id) => !getPhotoTypesForStore(allPhotos, id).has("外観"));
+
+    expect(
+      targetStoreId,
+      "事前条件が失われました: 外観写真が未登録の公開店舗が見つかりません",
+    ).toBeDefined();
+
+    await page.goto(`/store/${targetStoreId}`);
+
+    await expect(
+      page.getByText("店舗写真準備中", { exact: true }),
+    ).toBeVisible();
+    // alt_textは「{店舗名}の外観イメージ（AI生成）」の形式で登録されており、
+    // 外観写真が使われていれば必ず「外観」を含むaltのimgが存在するため、
+    // その不在で外観写真が表示されていないことを確認する。
+    await expect(page.locator('img[alt*="外観"]')).toHaveCount(0);
+  });
+
+  test("TC-U03-07: 店内写真が未登録の店舗では写真欄が表示されず、雰囲気の説明文は表示される", async ({
+    page,
+  }) => {
+    const targetStoreId = stores
+      .map((s) => s.store_id)
+      .find((id) => !getPhotoTypesForStore(allPhotos, id).has("店内"));
+
+    expect(
+      targetStoreId,
+      "事前条件が失われました: 店内写真が未登録の公開店舗が見つかりません",
+    ).toBeDefined();
+
+    const expectedAtmosphere = atmosphereByStore.get(targetStoreId!);
+    expect(
+      expectedAtmosphere,
+      "事前条件が失われました: atmosphere_textを取得できません",
+    ).toBeDefined();
+
+    await page.goto(`/store/${targetStoreId}`);
+
+    // 店内写真欄自体が表示されない（alt_textに「店内」を含むimgが存在しない）
+    await expect(page.locator('img[alt*="店内"]')).toHaveCount(0);
+
+    // 雰囲気の説明文は、店内写真の有無に関わらず表示される
+    const atmosphereHeading = page.getByText("お店の雰囲気", { exact: true });
+    const atmosphereText = atmosphereHeading.locator(
+      "xpath=following-sibling::p[1]",
+    );
+    await expect(atmosphereText).toHaveText(expectedAtmosphere!);
+  });
+
+  test("TC-COM-04（U03）: 料理写真が未登録の料理では『料理写真準備中』が表示され、写真は表示されない", async ({
+    page,
+  }) => {
+    let targetStoreId: number | undefined;
+    let targetDishId: number | undefined;
+    for (const row of storeDishes) {
+      const hasPhoto = allPhotos.some(
+        (p) =>
+          p.photo_type === "料理" &&
+          p.store_id === row.store_id &&
+          p.dish_id === row.dish_id,
+      );
+      if (!hasPhoto) {
+        targetStoreId = row.store_id;
+        targetDishId = row.dish_id;
+        break;
+      }
+    }
+
+    expect(
+      targetStoreId,
+      "事前条件が失われました: 料理写真が未登録の(店舗,料理)の組み合わせが見つかりません",
+    ).toBeDefined();
+    const dishName = dishNameById.get(targetDishId!);
+    expect(
+      dishName,
+      "事前条件が失われました: 料理名が取得できません",
+    ).toBeDefined();
+
+    await page.goto(`/store/${targetStoreId}`);
+
+    const container = getDishGridContainer(page);
+    const targetCard = getDishCardByName(container, dishName!);
+
+    await expect(
+      targetCard.getByText("料理写真準備中", { exact: true }),
+    ).toBeVisible();
+    await expect(targetCard.locator("img")).toHaveCount(0);
   });
 });

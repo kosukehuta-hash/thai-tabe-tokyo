@@ -190,6 +190,40 @@ export async function fetchPublishedStoreRegularHolidays(): Promise<
   );
 }
 
+export type StorePhotoRow = {
+  store_id: number;
+  photo_type: "外観" | "店内" | "料理";
+  dish_id: number | null;
+  photo_url: string;
+  alt_text: string;
+};
+
+export async function fetchAllStorePhotos(): Promise<StorePhotoRow[]> {
+  return restGet<StorePhotoRow[]>(
+    "store_photos?select=store_id,photo_type,dish_id,photo_url,alt_text",
+  );
+}
+
+/** 指定店舗に登録されている写真種別（外観／店内／料理）の集合を返す。 */
+export function getPhotoTypesForStore(
+  photos: StorePhotoRow[],
+  storeId: number,
+): Set<string> {
+  return new Set(
+    photos.filter((p) => p.store_id === storeId).map((p) => p.photo_type),
+  );
+}
+
+export type StoreAtmosphere = { store_id: number; atmosphere_text: string };
+
+export async function fetchPublishedStoreAtmosphere(): Promise<
+  StoreAtmosphere[]
+> {
+  return restGet<StoreAtmosphere[]>(
+    "stores?select=store_id,atmosphere_text&is_published=eq.true",
+  );
+}
+
 export type SceneValue = "solo" | "date" | "friends" | "family";
 
 const SCENE_COLUMN: Record<SceneValue, keyof PublishedStore> = {
