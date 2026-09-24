@@ -40,9 +40,8 @@ test.describe("TC-DB-02 提供停止料理の除外", () => {
   test("U02: 提供停止料理（パッタイ）で検索しても、対象店舗は検索結果に表示されない", async ({
     page,
   }) => {
-    const availableStoreIds = await fetchAvailableStoreIdsForDish(
-      PATTAI_DISH_ID,
-    );
+    const availableStoreIds =
+      await fetchAvailableStoreIdsForDish(PATTAI_DISH_ID);
     expect(
       availableStoreIds,
       "事前条件が失われました: パッタイがis_available=falseで登録されているはずの店舗が、is_available=true側に含まれています",
