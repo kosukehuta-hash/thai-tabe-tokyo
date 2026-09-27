@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { extractPrBodyFields } from "./pr-body-fields.mjs";
 
 /**
  * PRマージ時にdocs/PR一覧.mdを更新するスクリプト。
- * 推測でカテゴリ・内容を補完せず、必須情報が欠けている場合や
- * 未知のカテゴリが指定された場合はエラー終了する（ファイルは変更しない）。
+ * 推測で内容を補完せず、必須情報が欠けている場合はエラー終了する（ファイルは変更しない）。
  *
  * 使い方: node scripts/update-pr-history.mjs <pr-event.jsonのパス>
  */
@@ -36,41 +36,6 @@ function loadPrEvent(path) {
   return { number, title, body: body ?? "", merged_at };
 }
 
-/** PR本文の「## PR一覧用情報」セクションから各項目を取得する。 */
-function extractPrListInfo(body) {
-  const blockMatch = body.match(
-    /##\s*PR一覧用情報\s*\n([\s\S]*?)(?:\n##\s|\n?$)/,
-  );
-  if (!blockMatch) {
-    fail(
-      "PR本文に「## PR一覧用情報」セクションが見つかりません。テンプレートに従って記載してください。",
-    );
-  }
-  const blockText = blockMatch[1];
-
-  function getField(label) {
-    // \sは改行も含むため、値が空の場合に次の行を巻き込まないよう
-    // 行内の空白（[ \t]）だけに限定する。
-    const m = blockText.match(
-      new RegExp(`^-[ \\t]*${label}[：:][ \\t]*(.*)$`, "m"),
-    );
-    return m ? m[1].trim() : "";
-  }
-
-  const mainSummary = getField("主な対応内容");
-  const relatedIssue = getField("関連Issue") || "―";
-  const categoryRaw = getField("カテゴリ") || "―";
-  const note = getField("備考");
-
-  if (!mainSummary) {
-    fail(
-      "PR本文の「主な対応内容」が空です。docs/PR一覧.mdへ反映する内容を記載してください。",
-    );
-  }
-
-  return { mainSummary, relatedIssue, categoryRaw, note };
-}
-
 /** UTCのISO8601文字列をAsia/TokyoのYYYY-MM-DDへ変換する。 */
 function toJstDate(isoString) {
   const date = new Date(isoString);
@@ -98,26 +63,19 @@ function buildTableRow(cells) {
   return `| ${cells.join(" | ")} |`;
 }
 
-/** docs/PR一覧.mdのテキストを解析し、PR一覧表とカテゴリ別集計表を取り出す。 */
+/** docs/PR一覧.mdのテキストを解析し、PR一覧表を取り出す。 */
 function parsePrListMarkdown(content) {
   const lines = content.split("\n");
 
   const prTableHeadingIndex = lines.findIndex(
     (line) => line.trim() === "## PR一覧",
   );
-  const categoryHeadingIndex = lines.findIndex(
-    (line) => line.trim() === "## カテゴリ別集計",
-  );
-  if (prTableHeadingIndex === -1 || categoryHeadingIndex === -1) {
-    fail(
-      "docs/PR一覧.mdの構成（## PR一覧 / ## カテゴリ別集計）が想定と異なります。",
-    );
+  if (prTableHeadingIndex === -1) {
+    fail("docs/PR一覧.mdの構成（## PR一覧）が想定と異なります。");
   }
 
-  // PR一覧表: prTableHeadingIndex以降で最初に見つかる「| PR#」ヘッダー行から、
-  // categoryHeadingIndexより前の最後の表行まで。
   let prHeaderIndex = -1;
-  for (let i = prTableHeadingIndex; i < categoryHeadingIndex; i += 1) {
+  for (let i = prTableHeadingIndex; i < lines.length; i += 1) {
     if (lines[i].trim().startsWith("| PR#")) {
       prHeaderIndex = i;
       break;
@@ -127,10 +85,10 @@ function parsePrListMarkdown(content) {
 
   const prSeparatorIndex = prHeaderIndex + 1;
   let prLastRowIndex = prSeparatorIndex;
-  for (let i = prSeparatorIndex + 1; i < categoryHeadingIndex; i += 1) {
+  for (let i = prSeparatorIndex + 1; i < lines.length; i += 1) {
     if (parseRow(lines[i])) {
       prLastRowIndex = i;
-    } else if (lines[i].trim() === "") {
+    } else {
       break;
     }
   }
@@ -139,66 +97,33 @@ function parsePrListMarkdown(content) {
   for (let i = prSeparatorIndex + 1; i <= prLastRowIndex; i += 1) {
     const cells = parseRow(lines[i]);
     if (!cells) continue;
-    const [prNumber, title, description, issue, state, mergedDate, note] =
-      cells;
+    const [
+      prNumber,
+      title,
+      changes,
+      relatedIssue,
+      testContent,
+      state,
+      mergedDate,
+      note,
+    ] = cells;
     prRows.push({
       prNumber: Number(prNumber),
       title,
-      description,
-      issue,
+      changes,
+      relatedIssue,
+      testContent,
       state,
       mergedDate,
       note: note ?? "",
     });
   }
 
-  // カテゴリ別集計表: categoryHeadingIndex以降で最初に見つかる「| カテゴリ」ヘッダー行から。
-  let categoryHeaderIndex = -1;
-  for (let i = categoryHeadingIndex; i < lines.length; i += 1) {
-    if (lines[i].trim().startsWith("| カテゴリ")) {
-      categoryHeaderIndex = i;
-      break;
-    }
-  }
-  if (categoryHeaderIndex === -1)
-    fail("カテゴリ別集計表のヘッダー行が見つかりません。");
-
-  const categorySeparatorIndex = categoryHeaderIndex + 1;
-  let categoryLastRowIndex = categorySeparatorIndex;
-  for (let i = categorySeparatorIndex + 1; i < lines.length; i += 1) {
-    if (parseRow(lines[i])) {
-      categoryLastRowIndex = i;
-    } else {
-      break;
-    }
-  }
-
-  const categoryRows = [];
-  for (let i = categorySeparatorIndex + 1; i <= categoryLastRowIndex; i += 1) {
-    const cells = parseRow(lines[i]);
-    if (!cells) continue;
-    const [category, count, prNumbers] = cells;
-    categoryRows.push({
-      category,
-      count: Number(count),
-      prNumbers: prNumbers
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    });
-  }
-
-  // 冒頭の概要行（"GitHub上のPull Request（#1〜#68、実PR44件）..."）の行番号
+  // 冒頭の概要行（"GitHub上のPull Request（#1〜#70、実PR46件）..."）の行番号
   const summaryLineIndex = lines.findIndex((line) =>
     line.includes("GitHub上のPull Request"),
   );
   if (summaryLineIndex === -1) fail("冒頭の概要行が見つかりません。");
-
-  // 末尾の注記行（"※1つのPRが複数カテゴリに..."）の行番号
-  const footnoteLineIndex = lines.findIndex((line) =>
-    line.startsWith("※1つのPRが複数カテゴリ"),
-  );
-  if (footnoteLineIndex === -1) fail("末尾の注記行が見つかりません。");
 
   return {
     lines,
@@ -208,12 +133,6 @@ function parsePrListMarkdown(content) {
     prFirstRowIndex: prSeparatorIndex + 1,
     prLastRowIndex,
     prRows,
-    categoryHeaderIndex,
-    categorySeparatorIndex,
-    categoryFirstRowIndex: categorySeparatorIndex + 1,
-    categoryLastRowIndex,
-    categoryRows,
-    footnoteLineIndex,
   };
 }
 
@@ -224,9 +143,12 @@ function main() {
   }
 
   const prEvent = loadPrEvent(prEventPath);
-  const { mainSummary, relatedIssue, categoryRaw, note } = extractPrListInfo(
-    prEvent.body,
-  );
+  const { errors, changes, relatedIssue, testContent, note } =
+    extractPrBodyFields(prEvent.body);
+
+  if (errors.length > 0) {
+    fail(`PR本文の必須項目が不足しています: ${errors.join(" / ")}`);
+  }
 
   const original = readFileSync(PR_LIST_PATH, "utf-8");
   const parsed = parsePrListMarkdown(original);
@@ -244,8 +166,9 @@ function main() {
   const newRow = {
     prNumber: prEvent.number,
     title: prEvent.title,
-    description: mainSummary,
-    issue: relatedIssue,
+    changes,
+    relatedIssue,
+    testContent,
     state: "Merged",
     mergedDate,
     note,
@@ -255,37 +178,6 @@ function main() {
     (a, b) => a.prNumber - b.prNumber,
   );
 
-  // カテゴリの検証・更新（推測で新規カテゴリを作らない）。
-  const updatedCategoryRows = parsed.categoryRows.map((row) => ({
-    ...row,
-    prNumbers: [...row.prNumbers],
-  }));
-
-  if (categoryRaw !== "―") {
-    const categoryNames = categoryRaw
-      .split(/[、,]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    for (const categoryName of categoryNames) {
-      const target = updatedCategoryRows.find(
-        (row) => row.category === categoryName,
-      );
-      if (!target) {
-        const known = updatedCategoryRows.map((row) => row.category).join(", ");
-        fail(
-          `未知のカテゴリ「${categoryName}」が指定されました。docs/PR一覧.mdの既存カテゴリのいずれかを使用してください。既存カテゴリ: ${known}`,
-        );
-      }
-      const prLabel = `#${newRow.prNumber}`;
-      if (!target.prNumbers.includes(prLabel)) {
-        target.prNumbers.push(prLabel);
-        target.count = target.prNumbers.length;
-      }
-    }
-  }
-
-  // ここまでで問題がなければ、ファイル内容をメモリ上で完成させる。
   const lines = [...parsed.lines];
 
   const totalCount = updatedPrRows.length;
@@ -300,8 +192,9 @@ function main() {
     buildTableRow([
       String(row.prNumber),
       row.title,
-      row.description,
-      row.issue,
+      row.changes,
+      row.relatedIssue,
+      row.testContent,
       row.state,
       row.mergedDate,
       row.note,
@@ -311,27 +204,6 @@ function main() {
     parsed.prFirstRowIndex,
     parsed.prLastRowIndex - parsed.prFirstRowIndex + 1,
     ...newPrRowLines,
-  );
-
-  // PR一覧表の行数が変わった分だけ、カテゴリ表の行番号をずらす。
-  const rowCountDelta = newPrRowLines.length - parsed.prRows.length;
-  const categoryFirstRowIndex = parsed.categoryFirstRowIndex + rowCountDelta;
-  const categoryLastRowIndex = parsed.categoryLastRowIndex + rowCountDelta;
-  const footnoteLineIndex = parsed.footnoteLineIndex + rowCountDelta;
-
-  const newCategoryRowLines = updatedCategoryRows.map((row) =>
-    buildTableRow([row.category, String(row.count), row.prNumbers.join(", ")]),
-  );
-  lines.splice(
-    categoryFirstRowIndex,
-    categoryLastRowIndex - categoryFirstRowIndex + 1,
-    ...newCategoryRowLines,
-  );
-
-  // カテゴリ別集計は行数（カテゴリ数）自体を変えないため、追加のズレは発生しない。
-  lines[footnoteLineIndex] = lines[footnoteLineIndex].replace(
-    /PR総数（\d+）/,
-    `PR総数（${totalCount}）`,
   );
 
   const updatedContent = lines.join("\n");
