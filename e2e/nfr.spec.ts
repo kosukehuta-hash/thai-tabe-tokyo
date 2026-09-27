@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { fetchAllStorePhotos } from "./supabase-data";
+import { fetchAllStorePhotos, type StorePhotoRow } from "./supabase-data";
 
 /**
  * TC-NFR-04（操作性・アクセシビリティ、NF13〜NF17）のうち
@@ -112,15 +112,42 @@ test.describe("TC-NFR-04 操作性・アクセシビリティ", () => {
   }) => {
     const photos = await fetchAllStorePhotos();
 
-    const exteriorPhoto = photos.find((p) => p.photo_type === "外観");
+    // U03店舗詳細ページは、同じ店舗・同じ写真区分（外観は店舗単位、料理はdish_id単位）で
+    // display_orderが最も小さい1件だけを表示する
+    // （src/lib/queries/store.tsのfetchExteriorPhoto・fetchMainDishPhotosと同じ考え方）。
+    // store_photosにはU02検索結果専用に別途display_orderの大きい重複写真が
+    // 登録されているため、単に配列の先頭要素を採用するとU03に表示されない写真を
+    // 誤って選んでしまう。ここでも同じ基準（グループごとのdisplay_order最小）で選ぶ。
+    function pickLowestDisplayOrderPerGroup(
+      rows: StorePhotoRow[],
+      keyFn: (row: StorePhotoRow) => string,
+    ): StorePhotoRow[] {
+      const best = new Map<string, StorePhotoRow>();
+      for (const row of rows) {
+        const key = keyFn(row);
+        const current = best.get(key);
+        if (!current || row.display_order < current.display_order) {
+          best.set(key, row);
+        }
+      }
+      return [...best.values()];
+    }
+
+    const u03ExteriorPhotos = pickLowestDisplayOrderPerGroup(
+      photos.filter((p) => p.photo_type === "外観"),
+      (p) => `${p.store_id}`,
+    );
+    const exteriorPhoto = u03ExteriorPhotos[0];
     expect(
       exteriorPhoto,
       "事前条件が失われました: 外観写真が登録されている公開店舗の写真が見つかりません",
     ).toBeDefined();
 
-    const dishPhoto = photos.find(
-      (p) => p.photo_type === "料理" && p.dish_id !== null,
+    const u03DishPhotos = pickLowestDisplayOrderPerGroup(
+      photos.filter((p) => p.photo_type === "料理" && p.dish_id !== null),
+      (p) => `${p.store_id}-${p.dish_id}`,
     );
+    const dishPhoto = u03DishPhotos[0];
     expect(
       dishPhoto,
       "事前条件が失われました: 料理写真が登録されている店舗・料理の組み合わせが見つかりません",
