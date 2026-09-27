@@ -26,13 +26,16 @@ export function StoreVisitNote({
 }: StoreVisitNoteProps) {
   const [noteText, setNoteText] = useState(initialNoteText ?? "");
   const [hasNote, setHasNote] = useState(initialNoteText !== null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [saveState, saveAction, isSaving] = useActionState(
     async (prevState: SaveNoteState, formData: FormData) => {
+      setSuccessMessage(null);
       const result = await saveNote(prevState, formData);
       if (!result.error && result.noteText !== null) {
         setNoteText(result.noteText);
         setHasNote(true);
+        setSuccessMessage("メモを保存しました");
       }
       return result;
     },
@@ -41,10 +44,12 @@ export function StoreVisitNote({
 
   const [deleteState, deleteAction, isDeleting] = useActionState(
     async (prevState: DeleteNoteState, formData: FormData) => {
+      setSuccessMessage(null);
       const result = await deleteNote(prevState, formData);
       if (result.deleted) {
         setNoteText("");
         setHasNote(false);
+        setSuccessMessage("メモを削除しました");
       }
       return result;
     },
@@ -62,7 +67,10 @@ export function StoreVisitNote({
         <textarea
           name="noteText"
           value={noteText}
-          onChange={(event) => setNoteText(event.target.value)}
+          onChange={(event) => {
+            setNoteText(event.target.value);
+            setSuccessMessage(null);
+          }}
           maxLength={NOTE_MAX_LENGTH}
           rows={4}
           placeholder="このお店の感想やメモを残せます"
@@ -78,6 +86,11 @@ export function StoreVisitNote({
         {deleteState.error && (
           <p className={styles.error} role="alert">
             {deleteState.error}
+          </p>
+        )}
+        {successMessage && (
+          <p role="status" aria-live="polite">
+            {successMessage}
           </p>
         )}
 
