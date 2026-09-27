@@ -63,6 +63,28 @@ function buildTableRow(cells) {
   return `| ${cells.join(" | ")} |`;
 }
 
+/**
+ * docs/PR一覧.mdは一覧性を優先するため、PR本文の実データを超えて
+ * 推測・要約せず、文字数のみで機械的に切り詰める。
+ * 関連Issueは短いため対象外。
+ */
+const LIST_MAX_LENGTH = {
+  changes: 100,
+  testContent: 80,
+  note: 60,
+};
+
+function truncateForList(text, maxLength) {
+  if (text.length <= maxLength) return text;
+  let sliced = text.slice(0, maxLength);
+  // バッククォート（`コード`）が中途半端に途切れると表の見た目が崩れるため閉じる。
+  const backtickCount = (sliced.match(/`/g) ?? []).length;
+  if (backtickCount % 2 !== 0) {
+    sliced += "`";
+  }
+  return `${sliced}…`;
+}
+
 /** docs/PR一覧.mdのテキストを解析し、PR一覧表を取り出す。 */
 function parsePrListMarkdown(content) {
   const lines = content.split("\n");
@@ -166,12 +188,12 @@ function main() {
   const newRow = {
     prNumber: prEvent.number,
     title: prEvent.title,
-    changes,
+    changes: truncateForList(changes, LIST_MAX_LENGTH.changes),
     relatedIssue,
-    testContent,
+    testContent: truncateForList(testContent, LIST_MAX_LENGTH.testContent),
     state: "Merged",
     mergedDate,
-    note,
+    note: truncateForList(note, LIST_MAX_LENGTH.note),
   };
 
   const updatedPrRows = [...parsed.prRows, newRow].sort(
