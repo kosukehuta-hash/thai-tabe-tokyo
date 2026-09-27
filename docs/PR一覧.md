@@ -50,7 +50,7 @@ GitHub上のPull Request（#1〜#68、実PR44件）を確認して作成した�
 | 65  | test: finalize TC-DB-02 coverage and test specification       | TC-DB-02（提供停止料理の除外）のE2E追加、仕様書反映                          | ―         | Merged | 2026-09-24 |                                  |
 | 66  | fix: secure login next redirect                               | login内の重複next検証処理を共通化、オープンリダイレクト対策                  | ―         | Merged | 2026-09-27 |                                  |
 | 67  | feat: add memo success status messages                        | メモ登録・更新・削除の成功メッセージ表示を追加、仕様書を1本化                | ―         | Merged | 2026-09-27 |                                  |
-| 68  | docs: add pull request history and maintenance rule           | PR履歴一覧（docs/PR一覧.md）の追加と、CLAUDE.mdへのPR一覧更新ルールの追加    | ―         | Open   | ―          | PR履歴管理の導入                 |
+| 68  | docs: add pull request history and maintenance rule           | PR履歴一覧（docs/PR一覧.md）の追加と、CLAUDE.mdへのPR一覧更新ルールの追加    | ―         | Merged | 2026-09-27 | PR履歴管理の導入                 |
 
 ## カテゴリ別集計
 
