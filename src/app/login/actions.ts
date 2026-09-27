@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeNextPath } from "@/lib/safe-next-path";
 
 export type LoginState = {
   error: string | null;
@@ -14,50 +15,16 @@ const INVALID_CREDENTIALS_MESSAGE =
 const UNEXPECTED_STATE_ERROR_MESSAGE =
   "ログイン処理を完了できませんでした。時間をおいて再度お試しください。";
 
-// クライアント側から渡されたnextは信用せず、Server Action側でも必ず検証する。
-// 固定の内部オリジンを基準にnew URL()で正規化し、オリジンが一致する場合だけ
-// パス・クエリ・ハッシュを返す。"//"やバックスラッシュを使ったホストのすり替えは
-// オリジン不一致として一律で弾かれる。
-const INTERNAL_ORIGIN = "http://internal.invalid";
-const AUTH_ENTRY_PATHS = new Set(["/login", "/signup"]);
-
-function sanitizeNext(value: FormDataEntryValue | null): string {
-  if (typeof value !== "string" || value.length === 0) {
-    return "/";
-  }
-  if (!value.startsWith("/")) {
-    return "/";
-  }
-  if (/[\x00-\x1f]/.test(value)) {
-    return "/";
-  }
-
-  let url: URL;
-  try {
-    url = new URL(value, INTERNAL_ORIGIN);
-  } catch {
-    return "/";
-  }
-
-  if (url.origin !== INTERNAL_ORIGIN) {
-    return "/";
-  }
-
-  if (AUTH_ENTRY_PATHS.has(url.pathname)) {
-    // ログイン・サインアップへの遷移を許すとリダイレクトループになるため拒否する
-    return "/";
-  }
-
-  return `${url.pathname}${url.search}${url.hash}`;
-}
-
 export async function login(
   _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
   const email = formData.get("email");
   const password = formData.get("password");
-  const next = sanitizeNext(formData.get("next"));
+  const nextRaw = formData.get("next");
+  const next = sanitizeNextPath(
+    typeof nextRaw === "string" ? nextRaw : undefined,
+  );
 
   if (typeof email !== "string" || email.length === 0) {
     return { error: "メールアドレスを入力してください。" };

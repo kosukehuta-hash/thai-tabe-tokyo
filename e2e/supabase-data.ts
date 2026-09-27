@@ -196,11 +196,12 @@ export type StorePhotoRow = {
   dish_id: number | null;
   photo_url: string;
   alt_text: string;
+  display_order: number;
 };
 
 export async function fetchAllStorePhotos(): Promise<StorePhotoRow[]> {
   return restGet<StorePhotoRow[]>(
-    "store_photos?select=store_id,photo_type,dish_id,photo_url,alt_text",
+    "store_photos?select=store_id,photo_type,dish_id,photo_url,alt_text,display_order&order=store_id.asc,display_order.asc",
   );
 }
 
