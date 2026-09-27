@@ -1,0 +1,72 @@
+name: Update PR History
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  update-pr-history:
+    name: Update docs/PR一覧.md
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dump PR event data
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.writeFileSync('pr-event.json', JSON.stringify({
+              number: context.payload.pull_request.number,
+              title: context.payload.pull_request.title,
+              body: context.payload.pull_request.body ?? '',
+              merged_at: context.payload.pull_request.merged_at,
+            }));
+
+      - name: Update PR history
+        run: node scripts/update-pr-history.mjs pr-event.json
+
+      - name: Format with Prettier
+        run: npx prettier --write "docs/PR一覧.md"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "docs/PR一覧.md"
+
+          if git diff --cached --quiet; then
+            echo "変更なし。commitをスキップします"
+            exit 0
+          fi
+
+          git commit -m "docs: add PR #${{ github.event.pull_request.number }} to history"
+
+          for i in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "push失敗、リトライします ($i/3)"
+            git rebase --abort || true
+          done
+
+          echo "::error::mainへのpushに3回失敗しました。手動でdocs/PR一覧.mdを更新してください。"
+          exit 1
