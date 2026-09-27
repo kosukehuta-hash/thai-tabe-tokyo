@@ -1,0 +1,33 @@
+name: Check PR Body
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  check-pr-body:
+    name: PR本文の必須項目を確認
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Dump PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.writeFileSync('pr-body.json', JSON.stringify({
+              body: context.payload.pull_request.body ?? '',
+            }));
+
+      - name: Check PR body
+        run: node scripts/check-pr-body.mjs pr-body.json
