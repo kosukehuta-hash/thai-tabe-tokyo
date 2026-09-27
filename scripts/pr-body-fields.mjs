@@ -21,7 +21,14 @@ function extractSection(body, heading) {
 function splitLines(text) {
   return text
     .split("\n")
-    .map((line) => line.replace(/^-\s*/, "").trim())
+    .map((line) =>
+      line
+        .replace(/^-\s*/, "")
+        .trim()
+        .replace(/\s+/g, " ")
+        // Markdownテーブルの列区切りと衝突しないようエスケープする。
+        .replace(/\|/g, "\\|"),
+    )
     .filter(Boolean);
 }
 
