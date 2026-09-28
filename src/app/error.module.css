@@ -14,8 +14,16 @@
   font-size: 15px;
 }
 
-.retryButton {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   margin-top: 16px;
+}
+
+.retryButton {
   height: 42px;
   padding: 0 24px;
   font-size: 15px;
@@ -25,4 +33,9 @@
   border: none;
   border-radius: 999px;
   cursor: pointer;
+}
+
+.actionLink {
+  color: #b65c1f;
+  text-decoration: underline;
 }
