@@ -1,14 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { requireEnv } from "@/lib/env";
 import type { Database } from "@/types/database.types";
-
-function requireEnv(value: string | undefined, name: string): string {
-  if (!value) {
-    throw new Error(
-      `環境変数 ${name} が設定されていません。.env.local を確認してください。`,
-    );
-  }
-  return value;
-}
 
 const supabaseUrl = requireEnv(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

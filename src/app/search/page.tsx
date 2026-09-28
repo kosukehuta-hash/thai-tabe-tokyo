@@ -8,6 +8,7 @@ import StoreConditionTags from "./StoreConditionTags";
 import { PencilIcon } from "@/components/SearchIcons";
 import { buildTopHref, parseSearchConditions } from "@/lib/search-conditions";
 import { formatHoursForList, formatPriceForList } from "@/lib/format";
+import { getSceneLabels } from "@/lib/scene-labels";
 import {
   fetchSearchResults,
   type SearchQueryResult,
@@ -25,19 +26,7 @@ export type StoreDisplayInfo = Store & {
 };
 
 function buildSceneText(store: Store): string | null {
-  const scenes: string[] = [];
-  if (store.scene_solo) {
-    scenes.push("ひとり");
-  }
-  if (store.scene_date) {
-    scenes.push("デート");
-  }
-  if (store.scene_friends) {
-    scenes.push("友人");
-  }
-  if (store.scene_family) {
-    scenes.push("家族");
-  }
+  const scenes = getSceneLabels(store);
   return scenes.length > 0 ? scenes.join("・") : null;
 }
 
