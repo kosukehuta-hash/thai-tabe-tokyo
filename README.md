@@ -354,10 +354,10 @@ thai-tabe-tokyo/
 
 ## 設計資料
 
-- [THAI TABE TOKYO 要件仕様書](docs/THAI_TABE_TOKYO_要件仕様書_Ver1_実装開始版.xlsx)
-  - MVP範囲
+- [THAI TABE TOKYO 要件仕様書](docs/THAI_TABE_TOKYO_要件仕様書_Ver2_実装開始版.xlsx)
+  - MVP範囲（認証・店舗メモを含む）
   - 検索仕様
-  - U01・U02・U03の画面仕様
+  - U01〜U05の画面仕様（検索・店舗詳細・ログイン・サインアップ）
   - DB設計
   - 画面項目・操作イベント
   - 受け入れ条件・テスト仕様
@@ -369,18 +369,19 @@ thai-tabe-tokyo/
 
 ## テスト・動作確認
 
-現在、自動テストは未導入です。
-以下の方法で品質・動作を確認しています。
+Vitest・Playwright・GitHub Actionsによる自動テストを導入しています。
 
+- `npm run test`：Vitestによる単体テスト
+- `npm run test:e2e`：Playwrightによる主要画面（検索・店舗詳細・認証・店舗メモ等）のE2Eテスト
 - `npm run lint`：ESLintによるコード品質チェック
+- `npm run format:check`：Prettierによるフォーマットチェック
+- `npm run typecheck`：TypeScriptの型チェック
 - `npm run build`：本番ビルドが正常に完了することを確認
-- Vercel公開環境でU01 → U02 → U03の一連の画面遷移・操作を手動確認
-- PC・スマートフォン向けのレスポンシブ表示を確認
+- GitHub Actions（CI）で、PR作成時・mainへのpush時に上記のテスト・チェックを自動実行
+- PC・スマートフォン向けのレスポンシブ表示を手動確認
 - 公開後にブラウザのNetworkとVercel Logsを使って表示速度を確認
 
 要件仕様書には「受け入れ条件」「テスト仕様」を定義しています。
-
-今後の課題として、自動テストの導入を予定しています。
 
 ## 注意事項
 
