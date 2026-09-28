@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#76、実PR52件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#77、実PR53件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -59,3 +59,4 @@ GitHub上のPull Request（#1〜#76、実PR52件）を確認して作成した�
 | 74  | docs: CLAUDE.mdを現行仕様に統一し、READMEの古い記載を修正     | `CLAUDE.md`のタイトルから「Ver.1（MVP）」表記を外し、正式な仕様書を`docs/THAI_TABE_TOKYO_要件仕様書_Ver2_実装開始版.xlsx`に一本化した（Ver1・V…                            | なし      | `npx prettier --check CLAUDE.md README.md`：整形済みであることを確認、README修正内容は`package.json`…                                              | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 75  | docs: 15_テスト仕様に状態別表示の未対応・部分対応分を補完     | `docs/THAI_TABE_TOKYO_要件仕様書_Ver2_実装開始版.xlsx`の「15_テスト仕様」シートのみを修正した（他シート・コード・Playwright・Vitestは変更なし）、「…                       | なし      | openpyxlで編集後のファイルを読み込み、TC番号の重複がないこと（全61件）、13_状態別表示など他シートの内容・行数が変更前と同一であること、画面設計シ… | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 76  | fix: 共通エラー画面をST-COM-02の仕様に合わせて修正            | `src/app/error.tsx`の表示文言を、要件仕様書「13_状態別表示」ST-COM-02（データ取得失敗）に合わせて「情報を取得できませんでした。もう一度お試しください」に変更した、ボタン… | なし      | `npm run lint`：エラーなし、`npm run typecheck`：エラーなし、`npm run test`（Vitest）：既存45件すべて成功…                                         | Merged | 2026-09-28 | 「条件選択へ戻る」は、当初Next.jsの`Link`で実装したところ、エラー画面が表示された状態から押してもURLだけ… |
+| 77  | docs: テスト結果の記録ルールを4分類に統一                     | `docs/THAI_TABE_TOKYO_要件仕様書_Ver2_実装開始版.xlsx`の「15_テスト仕様」で、自動テストのみで確認していた23件の「OK」を「OK（自動確認）」へ統一した、テスト結…             | なし      | 15_テスト仕様の全61件を再集計し、OK（自動確認）23件・OK（手動確認）19件・OK（自動＋手動確認）8件・未実施11件・合計61件であることを確認した、…      | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
