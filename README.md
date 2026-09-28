@@ -128,7 +128,6 @@ Vercel Functionsを東京リージョンへ変更することで、
 - 店舗・料理データの拡充
 - Supabaseのデータ取得処理の最適化
 - UI/UXの継続的な改善
-- テストの充実
 
 ## 動作環境（Requirements）
 
