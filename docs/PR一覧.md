@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#80、実PR56件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#81、実PR57件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -63,3 +63,4 @@ GitHub上のPull Request（#1〜#80、実PR56件）を確認して作成した�
 | 78  | docs: テスト結果ルールをテスト方法非限定の4分類に更新         | `CLAUDE.md`の「テスト結果の記録ルール」を、テスト結果の判定ルールを4分類（OK（自動確認）／OK（手動確認）／OK（自動＋手動確認）／未実施）に整理し直した、テスト方法をPlaywrigh… | なし      | `npx prettier --check CLAUDE.md`：整形済みであることを確認、変更後のCLAUDE.mdの内容を目視で確認し、4分類・補足・報告ル…                                   | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 79  | fix: TC-COM-08の結果を新ルールに合わせOK（自動確認）に更新    | `docs/THAI_TABE_TOKYO_要件仕様書_Ver2_実装開始版.xlsx`の「15_テスト仕様」で、TC-COM-08の結果を`未実施`から`OK（自動確認）`へ更新した（CLAUDE.…                                 | なし      | Supabase接続先を一時的に無効化してデータ取得失敗を再現、固定メッセージ「情報を取得できませんでした。もう一度お試しください」の表示を確認、「再試行」の表… | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 80  | docs: READMEから古い「テストの充実」の記載を削除              | `README.md`の「今後の実装・改善予定」から「テストの充実」の1行を削除した（Vitest・Playwright・GitHub Actions CIを既に導入済みのため、実態と矛盾する記載だっ…                   | なし      | README.mdの差分が該当1行の削除のみであることを確認、Vitest / Playwright / GitHub Actions CIの説明がそのまま残っ…                                          | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
+| 81  | docs: 09_DB設計にstore_visit_notesの関係とER図を追加          | 「09_DB設計」の「テーブルの紐づけ」に、stores→store_visit_notes、auth.users→store_visit_notesの2関係を追加した、Mermaid erDiagr…                                               | なし      | Supabase migrationで実DB定義（各テーブルの主キー・外部キー・NULL許容・UNIQUE制約）を確認した、Mermaidコードが前半655文字…                                 | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
