@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#82、実PR58件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#83、実PR59件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -65,3 +65,4 @@ GitHub上のPull Request（#1〜#82、実PR58件）を確認して作成した�
 | 80  | docs: READMEから古い「テストの充実」の記載を削除              | `README.md`の「今後の実装・改善予定」から「テストの充実」の1行を削除した（Vitest・Playwright・GitHub Actions CIを既に導入済みのため、実態と矛盾する記載だっ…                   | なし      | README.mdの差分が該当1行の削除のみであることを確認、Vitest / Playwright / GitHub Actions CIの説明がそのまま残っ…                                          | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 81  | docs: 09_DB設計にstore_visit_notesの関係とER図を追加          | 「09_DB設計」の「テーブルの紐づけ」に、stores→store_visit_notes、auth.users→store_visit_notesの2関係を追加した、Mermaid erDiagr…                                               | なし      | Supabase migrationで実DB定義（各テーブルの主キー・外部キー・NULL許容・UNIQUE制約）を確認した、Mermaidコードが前半655文字…                                 | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 82  | refactor: requireEnvと利用シーンラベルの重複をDRY対応         | requireEnvを`src/lib/env.ts`へ共通化した、Supabase関連4箇所（`src/lib/supabase/client.ts`・`server.ts`・`proxy.ts`・…                                                          | なし      | `npm run lint`：成功、`npm run typecheck`：成功、`npm run test`：Vitest 45件すべて成功、`TC-U03-`…                                                        | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
+| 83  | fix: ログイン経由でU03へ戻った際の検索結果復帰を修正          | U02→U03遷移時に保存される`thai-tabe-tokyo:from-search`が、U03からログイン・新規登録へ移動しても残る問題を修正、U03の「ログイン」「新規登録」をクリックした時点…                | なし      | 追加TC：TC-AUTH-03「ログイン経由後の戻る導線」、- 期待結果：ログイン画面へ戻らない／U02検索結果へ遷移する／検索条件・スクロール位置の仕様が維持…          | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
