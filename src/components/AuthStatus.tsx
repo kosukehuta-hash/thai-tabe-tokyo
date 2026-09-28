@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logout, type LogoutState } from "@/app/logout/actions";
+import { FROM_SEARCH_STORAGE_KEY } from "@/app/store/[storeId]/BackToSearchLink";
 import styles from "./AuthStatus.module.css";
 
 type AuthState = "checking" | "loggedIn" | "loggedOut";
@@ -95,15 +96,32 @@ export function AuthStatus() {
       ? "/"
       : `${pathname}${query ? `?${query}` : ""}`;
 
+    // 店舗詳細（U03）からログイン・新規登録画面へ移動する場合、
+    // 「検索結果から来た」印を残したままにすると、ログイン後にU03へ戻った際、
+    // 「検索結果に戻る」がrouter.back()でログイン画面へ戻ってしまう。
+    // 検索結果以外の画面へ移動する時点で印を削除しておく。
+    const clearFromSearchMark = () => {
+      try {
+        sessionStorage.removeItem(FROM_SEARCH_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+    };
+
     return (
       <div className={styles.wrapper}>
         <Link
           href={`/login?next=${encodeURIComponent(nextPath)}`}
           className={styles.authLink}
+          onClick={clearFromSearchMark}
         >
           ログイン
         </Link>
-        <Link href="/signup" className={styles.authLink}>
+        <Link
+          href="/signup"
+          className={styles.authLink}
+          onClick={clearFromSearchMark}
+        >
           新規登録
         </Link>
       </div>
