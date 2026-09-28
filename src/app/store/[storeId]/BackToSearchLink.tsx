@@ -4,7 +4,9 @@ import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const FROM_SEARCH_STORAGE_KEY = "thai-tabe-tokyo:from-search";
+// U03を離れて検索結果以外の画面（ログイン画面等）へ移動する場合は、
+// この印をAuthStatus側で削除する（src/components/AuthStatus.tsx参照）。
+export const FROM_SEARCH_STORAGE_KEY = "thai-tabe-tokyo:from-search";
 
 function subscribe() {
   // sessionStorageの変更を監視する必要はない（マウント時点の値のみ使用する）
