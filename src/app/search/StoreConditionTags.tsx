@@ -8,17 +8,11 @@ import {
   SunIcon,
 } from "@/components/SearchIcons";
 import type { SceneValue, TimeValue } from "@/lib/search-conditions";
+import { SCENE_LABEL } from "@/lib/scene-labels";
 
 const TIME_LABEL: Record<TimeValue, string> = {
   lunch: "ランチ",
   dinner: "ディナー",
-};
-
-const SCENE_LABEL: Record<SceneValue, string> = {
-  solo: "ひとり",
-  date: "デート",
-  friends: "友人",
-  family: "家族",
 };
 
 type StoreConditionTagsProps = {

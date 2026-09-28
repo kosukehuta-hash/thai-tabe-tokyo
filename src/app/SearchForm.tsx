@@ -8,6 +8,7 @@ import {
   type SceneValue,
   type TimeValue,
 } from "@/lib/search-conditions";
+import { SCENE_OPTIONS } from "@/lib/scene-labels";
 import AiImageBadge from "@/components/AiImageBadge";
 import type { Area, Dish } from "./page";
 import styles from "./page.module.css";
@@ -17,13 +18,6 @@ const ALL_DISHES_IMAGE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1
 const TIME_OPTIONS: { value: TimeValue; label: string }[] = [
   { value: "lunch", label: "ランチ" },
   { value: "dinner", label: "ディナー" },
-];
-
-const SCENE_OPTIONS: { value: SceneValue; label: string }[] = [
-  { value: "solo", label: "ひとり" },
-  { value: "date", label: "デート" },
-  { value: "friends", label: "友人" },
-  { value: "family", label: "家族" },
 ];
 
 function SearchIcon() {

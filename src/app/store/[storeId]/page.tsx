@@ -17,6 +17,7 @@ import {
   parseSearchConditions,
 } from "@/lib/search-conditions";
 import { formatPriceForDetail, formatVerifiedDate } from "@/lib/format";
+import { getSceneLabels } from "@/lib/scene-labels";
 import {
   fetchExteriorPhoto,
   fetchInteriorPhotos,
@@ -24,27 +25,9 @@ import {
   fetchMainDishPhotos,
   fetchOwnNote,
   fetchStore,
-  type Store,
   type StoreFetchResult,
   type StorePhoto,
 } from "@/lib/queries/store";
-
-function buildSceneLabels(store: Store): string[] {
-  const labels: string[] = [];
-  if (store.scene_solo) {
-    labels.push("ひとり");
-  }
-  if (store.scene_date) {
-    labels.push("デート");
-  }
-  if (store.scene_friends) {
-    labels.push("友人");
-  }
-  if (store.scene_family) {
-    labels.push("家族");
-  }
-  return labels;
-}
 
 export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   const { storeId: rawStoreId } = await props.params;
@@ -93,7 +76,7 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   }
 
   const store = result.store;
-  const sceneLabels = buildSceneLabels(store);
+  const sceneLabels = getSceneLabels(store);
 
   const supabaseServer = await createServerSupabaseClient();
 
