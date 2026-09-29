@@ -130,6 +130,9 @@ export function AuthStatus() {
 
   return (
     <div className={styles.wrapper}>
+      <Link href="/notes" className={styles.authLink}>
+        メモ一覧
+      </Link>
       <span className={styles.statusText}>ログイン中</span>
       <form action={logoutAction}>
         <button
