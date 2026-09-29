@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthStatus } from "@/components/AuthStatus";
+import { HeaderHomeLink } from "@/components/HeaderHomeLink";
 import { StoreVisitNote } from "@/components/StoreVisitNote";
 import BackToSearchLink from "./BackToSearchLink";
 import StoreBasicInfo from "./StoreBasicInfo";
@@ -140,17 +140,11 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
           ← 検索結果に戻る
         </BackToSearchLink>
 
-        <div className={styles.headerInner}>
-          <Image
-            src="/images/thai-temple-logo-v2.png"
-            alt=""
-            width={1536}
-            height={1024}
-            priority
-            className={styles.headerLogoIcon}
-          />
-          <span className={styles.headerLogoText}>THAI TABE TOKYO</span>
-        </div>
+        <HeaderHomeLink
+          className={`${styles.headerInner} ${styles.headerHomeLink}`}
+          logoIconClassName={styles.headerLogoIcon}
+          logoTextClassName={styles.headerLogoText}
+        />
 
         <AuthStatus />
       </header>

@@ -526,4 +526,16 @@ test.describe("U02 検索結果ページ", () => {
     await expect(dinnerSlot.locator("svg path")).toHaveCount(1);
     await expect(dinnerSlot.locator("svg circle")).toHaveCount(0);
   });
+
+  test("TC-COM-09（U02）: ヘッダーのTHAI TABE TOKYOロゴをクリックするとU01トップ画面へ遷移する", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page
+      .getByRole("link", { name: "THAI TABE TOKYO", exact: true })
+      .click();
+
+    await expect(page).toHaveURL("/");
+  });
 });
