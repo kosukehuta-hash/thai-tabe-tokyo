@@ -425,4 +425,66 @@ test.describe("U03 店舗詳細ページ", () => {
     ).toBeVisible();
     await expect(targetCard.locator("img")).toHaveCount(0);
   });
+
+  test("TC-COM-09（U03）: ヘッダーのTHAI TABE TOKYOロゴをクリックするとU01トップ画面へ遷移する", async ({
+    page,
+  }) => {
+    await page.goto(`/store/${stores[0].store_id}`);
+
+    await page
+      .getByRole("link", { name: "THAI TABE TOKYO", exact: true })
+      .click();
+
+    await expect(page).toHaveURL("/");
+  });
+
+  test("TC-COM-09（U03・回帰）: タイトルロゴでU01へ戻ったあと同じ店舗へ直リンクすると『検索結果に戻る』が通常のLinkとして表示される", async ({
+    page,
+  }) => {
+    // U02→U03（「詳しく見る」）で sessionStorage に「検索結果から来た」印が付く
+    await page.goto("/search?dish_id=2");
+    await page
+      .getByRole("link", { name: "詳しく見る", exact: true })
+      .first()
+      .click();
+    await page.waitForURL(/\/store\/\d+/);
+    const storeUrl = new URL(page.url());
+    const storeId = storeUrl.pathname.match(/\/store\/(\d+)/)?.[1];
+    expect(
+      storeId,
+      "事前条件が失われました: 遷移先の店舗IDを取得できません",
+    ).toBeDefined();
+
+    const markerBeforeLogoClick = await page.evaluate(() =>
+      sessionStorage.getItem("thai-tabe-tokyo:from-search"),
+    );
+    expect(
+      markerBeforeLogoClick,
+      "事前条件が失われました: 「検索結果から来た」印が保存されていません",
+    ).not.toBeNull();
+
+    // タイトルロゴでU01へ戻る → 印が削除される
+    await page
+      .getByRole("link", { name: "THAI TABE TOKYO", exact: true })
+      .click();
+    await page.waitForURL("/");
+    const markerAfterLogoClick = await page.evaluate(() =>
+      sessionStorage.getItem("thai-tabe-tokyo:from-search"),
+    );
+    expect(markerAfterLogoClick).toBeNull();
+
+    // 検索を経由せず、同じ店舗へ直リンクする
+    await page.goto(`/store/${storeId}`);
+
+    // 「検索結果に戻る」はrouter.back()用のbuttonではなく、通常のLinkとして表示される
+    await expect(
+      page.getByRole("button", { name: /検索結果に戻る/ }),
+    ).toHaveCount(0);
+    const backLink = page.getByRole("link", { name: /検索結果に戻る/ });
+    await expect(backLink).toHaveCount(1);
+
+    // クリックするとU02の検索結果（条件なしのフォールバック）へ遷移する
+    await backLink.click();
+    await expect(page).toHaveURL(/\/search/);
+  });
 });

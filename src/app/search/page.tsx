@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AuthStatus } from "@/components/AuthStatus";
+import { HeaderHomeLink } from "@/components/HeaderHomeLink";
 import styles from "./page.module.css";
 import ScrollRestorer from "./ScrollRestorer";
 import StoreCard from "./StoreCard";
@@ -121,17 +121,11 @@ export default async function SearchPage(props: PageProps<"/search">) {
           条件を変更する
         </Link>
 
-        <div className={styles.headerInner}>
-          <Image
-            src="/images/thai-temple-logo-v2.png"
-            alt=""
-            width={1536}
-            height={1024}
-            priority
-            className={styles.headerLogoIcon}
-          />
-          <span className={styles.headerLogoText}>THAI TABE TOKYO</span>
-        </div>
+        <HeaderHomeLink
+          className={`${styles.headerInner} ${styles.headerHomeLink}`}
+          logoIconClassName={styles.headerLogoIcon}
+          logoTextClassName={styles.headerLogoText}
+        />
 
         <AuthStatus />
       </header>
