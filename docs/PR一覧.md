@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#85、実PR61件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#86、実PR62件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -68,3 +68,4 @@ GitHub上のPull Request（#1〜#85、実PR61件）を確認して作成した�
 | 83  | fix: ログイン経由でU03へ戻った際の検索結果復帰を修正          | U02→U03遷移時に保存される`thai-tabe-tokyo:from-search`が、U03からログイン・新規登録へ移動しても残る問題を修正、U03の「ログイン」「新規登録」をクリックした時点…                | なし      | 追加TC：TC-AUTH-03「ログイン経由後の戻る導線」、- 期待結果：ログイン画面へ戻らない／U02検索結果へ遷移する／検索条件・スクロール位置の仕様が維持…          | Merged | 2026-09-28 | このPRではマージを行わない（PR作成とActions結果確認まで）、対象外の`next.config.ts`・`tsc`…               |
 | 84  | feat: U02・U03のヘッダーロゴにトップへ戻る導線を追加          | U02（検索結果）・U03（店舗詳細）のヘッダーにある「THAI TABE TOKYO」ロゴを、Next.jsのLinkでトップ画面（/）へ遷移できるようにし、共通コンポーネント`HeaderHome`…                 | なし      | typecheck / lint / build：すべて成功、Playwright：既存テスト全42件成功（回帰なし）、TC-COM-09（U02・U03・回帰…                                            | Merged | 2026-09-29 | なし                                                                                                      |
 | 85  | docs: CLAUDE.mdにGit安全ルールを追加                          | `CLAUDE.md`に「Git安全ルール」セクションを追加した、ブランチ操作・reset・rebase等の危険なGit操作の前に`git status`/`git diff`を確認すること、未com…                            | なし      | `npx prettier --check CLAUDE.md`：整形済みであることを確認、差分がCLAUDE.mdへの追記のみであることを確認                                                   | Merged | 2026-09-29 | 前PR（#84）のマージ作業中に`git reset --hard`で未commit変更を誤って破棄する事故が発生したた…              |
+| 86  | fix: 平田さん再レビューのセキュリティ・設定対応               | READMEにSupabase型定義再生成手順を追加、READMEにレビュー用共通アカウントのパスワード変更禁止注記を追加、`db:types`スクリプトを追加、Supabaseパスワード最小文字数を…            | なし      | typecheck：成功、lint：成功、build：成功、Vitest：45件成功、Playwright：42件成功                                                                          | Merged | 2026-09-29 | 平田さん再レビューで指摘された本番運用・セキュリティ・コード管理への対応をまとめたものです。              |
