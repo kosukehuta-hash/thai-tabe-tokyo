@@ -11,6 +11,7 @@ if (!supabaseUrl) {
 const supabaseHostname = new URL(supabaseUrl).hostname;
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   images: {
     remotePatterns: [
       {
