@@ -13,8 +13,7 @@ export type NoteWithStore = {
 };
 
 export type NotesFetchResult =
-  | { status: "error" }
-  | { status: "success"; notes: NoteWithStore[] };
+  { status: "error" } | { status: "success"; notes: NoteWithStore[] };
 
 export async function fetchOwnNotesWithStores(
   supabaseServer: Awaited<ReturnType<typeof createServerSupabaseClient>>,

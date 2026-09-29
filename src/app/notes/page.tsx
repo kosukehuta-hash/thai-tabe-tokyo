@@ -49,9 +49,7 @@ export default async function NotesPage() {
         <h1 className={styles.title}>メモ一覧</h1>
 
         {result.status === "error" && (
-          <p role="alert">
-            情報を取得できませんでした。もう一度お試しください
-          </p>
+          <p role="alert">情報を取得できませんでした。もう一度お試しください</p>
         )}
 
         {result.status === "success" && result.notes.length === 0 && (
@@ -78,9 +76,7 @@ export default async function NotesPage() {
                         <span className={styles.storeName}>
                           {note.storeName}
                         </span>
-                        <span className={styles.unpublishedBadge}>
-                          非公開
-                        </span>
+                        <span className={styles.unpublishedBadge}>非公開</span>
                       </>
                     )}
                   </span>

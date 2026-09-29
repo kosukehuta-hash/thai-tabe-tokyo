@@ -31,8 +31,7 @@ const LOCAL_SUPABASE_ANON_KEY =
   process.env.TEST_LOCAL_SUPABASE_ANON_KEY ??
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 const LOCAL_DB_CONTAINER =
-  process.env.TEST_LOCAL_SUPABASE_DB_CONTAINER ??
-  "supabase_db_thai-tabe-tokyo";
+  process.env.TEST_LOCAL_SUPABASE_DB_CONTAINER ?? "supabase_db_thai-tabe-tokyo";
 
 function newAnonClient(): SupabaseClient<Database> {
   return createClient<Database>(LOCAL_SUPABASE_URL, LOCAL_SUPABASE_ANON_KEY);
@@ -41,7 +40,17 @@ function newAnonClient(): SupabaseClient<Database> {
 function runPsql(sql: string): void {
   execFileSync(
     "docker",
-    ["exec", LOCAL_DB_CONTAINER, "psql", "-U", "postgres", "-d", "postgres", "-c", sql],
+    [
+      "exec",
+      LOCAL_DB_CONTAINER,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-c",
+      sql,
+    ],
     { stdio: "ignore", timeout: 10_000 },
   );
 }
@@ -99,17 +108,19 @@ describe.skipIf(!localAvailable)(
       clientA = newAnonClient();
       clientB = newAnonClient();
 
-      const { data: signUpA, error: signUpAError } = await clientA.auth.signUp(
-        { email: userAEmail, password },
-      );
+      const { data: signUpA, error: signUpAError } = await clientA.auth.signUp({
+        email: userAEmail,
+        password,
+      });
       if (signUpAError || !signUpA.user) {
         throw new Error(`userA作成に失敗: ${signUpAError?.message}`);
       }
       userAId = signUpA.user.id;
 
-      const { data: signUpB, error: signUpBError } = await clientB.auth.signUp(
-        { email: userBEmail, password },
-      );
+      const { data: signUpB, error: signUpBError } = await clientB.auth.signUp({
+        email: userBEmail,
+        password,
+      });
       if (signUpBError || !signUpB.user) {
         throw new Error(`userB作成に失敗: ${signUpBError?.message}`);
       }
