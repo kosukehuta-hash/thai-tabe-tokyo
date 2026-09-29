@@ -237,6 +237,16 @@ supabase db reset
 
 ローカルDBを作り直し、migration → seedを再適用します。
 
+### 型定義（TypeScript）の再生成
+
+Supabaseのテーブル・カラムなど、DBスキーマを変更した場合は、以下のコマンドで型定義を再生成してください。
+
+```bash
+npm run db:types
+```
+
+ローカルSupabase（`supabase start`で起動したもの）の現在のスキーマから、`src/types/database.types.ts` が最新の内容に再生成されます。
+
 ### ローカルSupabaseの停止
 
 ```bash
@@ -283,6 +293,8 @@ supabase stop
 
 認証機能・店舗メモ機能をお試しいただくためのレビュー専用共有アカウントです。
 個人を特定する情報は登録していません。
+
+※レビュー用の共通アカウントです。パスワードの変更は行わないでください。
 
 | 項目 | 値 |
 | --- | --- |
