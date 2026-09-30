@@ -163,9 +163,22 @@
   font-size: 13px;
 }
 
-.storeName {
+/* 店舗名（とログイン時のお気に入りボタン）。orderと上余白は、従来.storeNameが
+   持っていたものをこの囲みへ移しただけで、未ログイン時の見た目は変わらない。
+   店舗名とボタンが1行に収まらない幅（情報カードが狭いタブレット幅・長い店舗名）では、
+   店舗名が1文字ずつ折り返されないよう、ボタンを次の行（右寄せ）へ回す */
+.storeHeader {
   order: 2;
   margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.storeName {
+  min-width: 0;
   font-size: 22px;
   font-weight: 700;
   color: #2b2118;
@@ -560,9 +573,12 @@
     aspect-ratio: auto;
   }
 
-  .storeName {
+  .storeHeader {
     order: initial;
     margin-top: 0;
+  }
+
+  .storeName {
     font-size: 24px;
   }
 
