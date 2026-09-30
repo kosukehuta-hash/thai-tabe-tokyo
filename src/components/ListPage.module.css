@@ -35,9 +35,14 @@
   cursor: pointer;
 }
 
+/* スマホ幅では認証表示が2段目に回り、ログイン時は「メモ一覧」「お気に入り」で横に広がる。
+   戻るボタンをヘッダー中央（1段目と2段目にまたがる位置）に置くと2段目の左端に被るため、
+   1段目（ロゴの行）だけに収まる位置へ上げる */
 @media (max-width: 767px) {
   .headerBackButton {
     left: 10px;
+    top: 8px;
+    transform: none;
     height: 36px;
     padding: 0 12px;
     font-size: 14px;
