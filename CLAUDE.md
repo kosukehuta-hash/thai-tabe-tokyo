@@ -10,7 +10,9 @@
 - 仕様変更が必要な場合は、勝手に変更せず確認する
 
 ## 対象機能
-- 対象機能はU01〜U05、検索、画面遷移、認証（サインアップ・ログイン・ログアウト）、店舗メモCRUDとする
+- 対象機能はU01〜U07（U06 メモ一覧、U07 お気に入りを含む）、検索、画面遷移、認証（サインアップ・ログイン・ログアウト）、店舗メモCRUDとする
+- お気に入り機能（U07 お気に入り画面、U03のお気に入り登録・解除）も対象機能とする
+- お気に入りはログインユーザー本人だけが登録・解除でき、更新機能はない（1ユーザー・1店舗につき1件）。非公開店舗は新規登録できず、登録後に非公開になってもお気に入り行は残す（U07では「非公開」と表示し、詳細リンクは表示しない）。詳細は要件仕様書 Ver2 を正とする
 - 仕様書にない機能や技術を独自に追加しない
 
 ## 技術構成
@@ -20,14 +22,14 @@
 - Next.js 16.3.4ではmiddleware.tsではなくproxy.tsを使用する
 
 ## DB
-- DBはareas、dishes、stores、store_dishes、store_photosの既存5テーブルに、store_visit_notes（店舗メモ）を加えた6テーブルとする
+- DBはareas、dishes、stores、store_dishes、store_photosの既存5テーブルに、store_visit_notes（店舗メモ）、store_favorites（お気に入り）を加えた7テーブルとする
 - auth.usersはSupabaseが管理する組み込みテーブルであり、独自migrationの作成対象外とする
 - walk_minutesは手入力とし、地図APIを追加しない
 
 ## 環境変数・セキュリティ
 - ブラウザで使用する環境変数はNEXT_PUBLIC_SUPABASE_URLとNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEYだけ
 - 認証機能を追加しても、上記2つ以外の公開環境変数は追加しない
-- SUPABASE_SECRET_KEYとSUPABASE_SERVICE_ROLE_KEYはMVPで設定・使用・出力しない（認証・店舗メモ機能でも同様とする）
+- SUPABASE_SECRET_KEYとSUPABASE_SERVICE_ROLE_KEYはMVPで設定・使用・出力しない（認証・店舗メモ・お気に入り機能でも同様とする）
 - 環境変数の実値は、ローカルでは.env.local、本番ではVercel Environment Variablesだけに保存し、コード、GitHub、仕様書、README、CLAUDE.md、チャット、通常ログには記載・出力しない
 - .env.localはGit管理対象外とし、.env.exampleには使用する2つの環境変数名だけを記載して実値は入れない
 
