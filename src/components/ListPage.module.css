@@ -1,0 +1,171 @@
+.headerBand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  row-gap: 4px;
+  column-gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #fdf9f2;
+  border-bottom: 2px solid #e2712b;
+  position: relative;
+}
+
+/* U03「検索結果に戻る」のヘッダー内表示(.headerBackLink)と同じデザイン系。
+   ヘッダー中央のロゴをflexの中央揃えのまま保つため、位置指定はabsoluteにする。
+   AuthStatus側のright:16px（.wrapperの既定値）を基準にしつつ、
+   微調整のうえleft:28pxを採用している */
+.headerBackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 42px;
+  padding: 0 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f4d3a;
+  background-color: #ffffff;
+  border: 1px solid #1f4d3a;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .headerBackButton {
+    left: 10px;
+    height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 899px) {
+  .headerBand {
+    --auth-status-position: relative;
+    --auth-status-top: auto;
+    --auth-status-right: auto;
+    --auth-status-transform: none;
+    --auth-status-flex-basis: 100%;
+  }
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerHomeLink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.headerHomeLink:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+.headerHomeLink:focus-visible {
+  outline: 2px solid #0b4f1b;
+  outline-offset: 3px;
+}
+
+.headerLogoIcon {
+  width: auto;
+  height: 32px;
+}
+
+.headerLogoText {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #0b4f1b;
+  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.page {
+  width: 94vw;
+  max-width: 800px;
+  margin: 24px auto;
+  font-family: var(--font-geist-sans);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #2b2118;
+  margin-bottom: 16px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  border: 1px solid #e5ddce;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background-color: #ffffff;
+}
+
+.itemHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.storeNameGroup {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.storeLink {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0b4f1b;
+}
+
+.storeName {
+  font-size: 17px;
+  font-weight: 700;
+  color: #2b2118;
+}
+
+.unpublishedBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a5a00;
+  background-color: #fff2d6;
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #2b2118;
+}
+
+.emptyText {
+  font-size: 16px;
+}
