@@ -26,21 +26,7 @@ import {
  *
  * 【テストの順序について】
  * 「公開状態」→「非公開化後」の順に状態を進めるため、it は上から順に実行される前提で書いている。
- *
- * 型定義（database.types.ts）にはまだ store_favorites / get_own_favorites が無いため
- * （`npm run db:types` による再生成は別工程）、このファイルでは型なしのクライアントを使う。
- * 再生成後は asLoose() を外して型付きのクライアントに戻せる。
  */
-
-const asLoose = (client: SupabaseClient<Database>) =>
-  client as unknown as SupabaseClient;
-
-type FavoriteStoreRow = {
-  store_id: number;
-  store_name: string;
-  is_published: boolean;
-  created_at: string;
-};
 
 const TF001_MESSAGE = "store is not available for favorites";
 const NON_EXISTENT_STORE_ID = 999_999_999;
@@ -99,7 +85,7 @@ describe.skipIf(!localAvailable)(
         [clientA, userAId],
         [clientB, userBId],
       ] as const) {
-        const { error } = await asLoose(client)
+        const { error } = await client
           .from("store_favorites")
           .insert({ user_id: userId, store_id: storeX });
         if (error) {
@@ -120,7 +106,7 @@ describe.skipIf(!localAvailable)(
 
     describe("公開状態（A={X}, B={X}、X・Yとも公開）", () => {
       it("TC-SEC-15: 本人のお気に入りだけを取得できる", async () => {
-        const { data, error } = await asLoose(clientA)
+        const { data, error } = await clientA
           .from("store_favorites")
           .select("user_id, store_id");
         expect(error).toBeNull();
@@ -128,7 +114,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-16: 他人のお気に入りは（user_idを指定しても）取得できない", async () => {
-        const { data, error } = await asLoose(clientA)
+        const { data, error } = await clientA
           .from("store_favorites")
           .select("user_id, store_id")
           .eq("user_id", userBId);
@@ -137,7 +123,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-17: 他人のお気に入りは削除できず、行が残る", async () => {
-        const { data, error } = await asLoose(clientA)
+        const { data, error } = await clientA
           .from("store_favorites")
           .delete()
           .eq("user_id", userBId)
@@ -148,7 +134,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-19: 他人のuser_idを指定して登録できない（RLS: 42501）", async () => {
-        const { error } = await asLoose(clientA)
+        const { error } = await clientA
           .from("store_favorites")
           .insert({ user_id: userBId, store_id: storeY });
         expect(error?.code).toBe("42501");
@@ -156,7 +142,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-18: anon は SELECT / INSERT / DELETE のいずれもできない（42501）", async () => {
-        const anon = asLoose(newAnonClient());
+        const anon = newAnonClient();
         const selectResult = await anon.from("store_favorites").select("*");
         expect(selectResult.error?.code).toBe("42501");
         const insertResult = await anon
@@ -172,7 +158,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-18（補足）: authenticated は UPDATE できない（42501）", async () => {
-        const { error } = await asLoose(clientA)
+        const { error } = await clientA
           .from("store_favorites")
           .update({ store_id: storeY })
           .eq("user_id", userAId);
@@ -181,7 +167,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-FAV-04: 同じ店舗の二重登録は一意制約で拒否される（23505）", async () => {
-        const { error } = await asLoose(clientA)
+        const { error } = await clientA
           .from("store_favorites")
           .insert({ user_id: userAId, store_id: storeX });
         expect(error?.code).toBe("23505");
@@ -189,9 +175,9 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-20: get_own_favorites() は本人のお気に入りの店舗を、最小限の列だけで返す", async () => {
-        const { data, error } = await asLoose(clientA).rpc("get_own_favorites");
+        const { data, error } = await clientA.rpc("get_own_favorites");
         expect(error).toBeNull();
-        const rows = data as FavoriteStoreRow[];
+        const rows = data ?? [];
         expect(rows).toHaveLength(1);
         expect(Object.keys(rows[0]).sort()).toEqual([
           "created_at",
@@ -205,15 +191,14 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-23: anon は get_own_favorites() を実行できない（42501）", async () => {
-        const { data, error } =
-          await asLoose(newAnonClient()).rpc("get_own_favorites");
+        const { data, error } = await newAnonClient().rpc("get_own_favorites");
         expect(data).toBeNull();
         expect(error?.code).toBe("42501");
       });
 
       it("TC-FAV-02（DB側）: 公開店舗を本人が新規登録できる", async () => {
         // 後段の「非公開化後」の前提（B={X,Y}）を作る。Y は今は公開中
-        const { error } = await asLoose(clientB)
+        const { error } = await clientB
           .from("store_favorites")
           .insert({ user_id: userBId, store_id: storeY });
         expect(error).toBeNull();
@@ -229,7 +214,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-FAV-05: 非公開店舗の新規登録は TF001 で拒否される", async () => {
-        const { error } = await asLoose(clientA)
+        const { error } = await clientA
           .from("store_favorites")
           .insert({ user_id: userAId, store_id: storeY });
         expect(error?.code).toBe("TF001");
@@ -238,7 +223,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-FAV-05: 存在しない店舗の新規登録も TF001 で拒否される（非公開と区別しない）", async () => {
-        const { error } = await asLoose(clientA)
+        const { error } = await clientA
           .from("store_favorites")
           .insert({ user_id: userAId, store_id: NON_EXISTENT_STORE_ID });
         expect(error?.code).toBe("TF001");
@@ -247,7 +232,7 @@ describe.skipIf(!localAvailable)(
 
       it("TC-FAV-08: 登録後に店舗が非公開になっても、お気に入り行は残る", async () => {
         expect(countFavorites(userBId, storeY)).toBe(1);
-        const { data, error } = await asLoose(clientB)
+        const { data, error } = await clientB
           .from("store_favorites")
           .select("store_id")
           .eq("store_id", storeY);
@@ -256,9 +241,9 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-21: get_own_favorites() は公開・非公開の両方を返す（新しい順）", async () => {
-        const { data, error } = await asLoose(clientB).rpc("get_own_favorites");
+        const { data, error } = await clientB.rpc("get_own_favorites");
         expect(error).toBeNull();
-        const rows = data as FavoriteStoreRow[];
+        const rows = data ?? [];
         expect(rows.map((r) => [r.store_id, r.is_published])).toEqual([
           [storeY, false], // 後から登録したY（非公開）が先
           [storeX, true],
@@ -267,9 +252,9 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-22: 他人のお気に入りの非公開店舗名は取得できない", async () => {
-        const { data, error } = await asLoose(clientA).rpc("get_own_favorites");
+        const { data, error } = await clientA.rpc("get_own_favorites");
         expect(error).toBeNull();
-        const rows = data as FavoriteStoreRow[];
+        const rows = data ?? [];
         expect(rows.map((r) => r.store_id)).toEqual([storeX]);
       });
 
@@ -283,7 +268,7 @@ describe.skipIf(!localAvailable)(
       });
 
       it("TC-SEC-17（補足）: 非公開になった自分のお気に入りは解除できる", async () => {
-        const { data, error } = await asLoose(clientB)
+        const { data, error } = await clientB
           .from("store_favorites")
           .delete()
           .eq("user_id", userBId)
@@ -293,11 +278,8 @@ describe.skipIf(!localAvailable)(
         expect(data).toEqual([{ store_id: storeY }]);
         expect(countFavorites(userBId, storeY)).toBe(0);
 
-        const { data: rpcData } =
-          await asLoose(clientB).rpc("get_own_favorites");
-        expect((rpcData as FavoriteStoreRow[]).map((r) => r.store_id)).toEqual([
-          storeX,
-        ]);
+        const { data: rpcData } = await clientB.rpc("get_own_favorites");
+        expect((rpcData ?? []).map((r) => r.store_id)).toEqual([storeX]);
       });
     });
 
