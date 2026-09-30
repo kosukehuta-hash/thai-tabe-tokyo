@@ -79,3 +79,52 @@ describe("LoggedInStatus（ログイン時）", () => {
     expect(failed).toContain("ログアウトできませんでした");
   });
 });
+
+describe("LoggedInStatus の戻り先（returnTo）", () => {
+  function render(returnTo?: string) {
+    return renderToStaticMarkup(
+      <LoggedInStatus
+        returnTo={returnTo}
+        logoutAction={() => {}}
+        isLoggingOut={false}
+        logoutError={null}
+      />,
+    );
+  }
+
+  it("U01から開く場合は returnTo を付けない（閉じるとU01へ戻る）", () => {
+    expect(links(render("/"))).toEqual([
+      ["/notes", "メモ一覧"],
+      ["/favorites", "お気に入り"],
+    ]);
+  });
+
+  it("U02から開く場合は、検索条件付きのURLを returnTo として両方のリンクに付ける", () => {
+    const returnTo = encodeURIComponent("/search?area_id=1&time=lunch");
+    expect(links(render("/search?area_id=1&time=lunch"))).toEqual([
+      [`/notes?returnTo=${returnTo}`, "メモ一覧"],
+      [`/favorites?returnTo=${returnTo}`, "お気に入り"],
+    ]);
+  });
+
+  it("U03から開く場合は、その店舗詳細のURLを returnTo として両方のリンクに付ける", () => {
+    const html = render("/store/123?area_id=1&time=lunch");
+    expect(html).toContain(
+      "/notes?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
+    );
+    expect(html).toContain(
+      "/favorites?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
+    );
+  });
+
+  it("不正な戻り先（外部URL・一覧画面自身）は付けない", () => {
+    expect(links(render("https://example.com"))).toEqual([
+      ["/notes", "メモ一覧"],
+      ["/favorites", "お気に入り"],
+    ]);
+    expect(links(render("/notes"))).toEqual([
+      ["/notes", "メモ一覧"],
+      ["/favorites", "お気に入り"],
+    ]);
+  });
+});

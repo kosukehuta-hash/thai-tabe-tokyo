@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logout, type LogoutState } from "@/app/logout/actions";
 import { FROM_SEARCH_STORAGE_KEY } from "@/app/store/[storeId]/BackToSearchLink";
+import { buildListHref, resolveHeaderReturnTo } from "@/lib/return-to";
 import styles from "./AuthStatus.module.css";
 
 type AuthState = "checking" | "loggedIn" | "loggedOut";
@@ -14,6 +15,16 @@ const initialLogoutState: LogoutState = { error: null };
 // /login・/signup自体からnextを作ると意味がないため除外する
 // （このコンポーネントは現状U01〜U03にしか置かれないが、念のため防御する）
 const AUTH_ENTRY_PATHS = new Set(["/login", "/signup"]);
+// U03を離れて検索結果以外の画面（ログイン画面、メモ一覧、お気に入り等）へ移動する場合は、
+// 「検索結果から来た」印を削除する。印を残したままU03へ戻ると、
+// 「検索結果に戻る」がrouter.back()で直前の画面（一覧等）へ戻ってしまう。
+function clearFromSearchMark() {
+  try {
+    sessionStorage.removeItem(FROM_SEARCH_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 export function AuthStatus() {
   const [authState, setAuthState] = useState<AuthState>("checking");
@@ -96,18 +107,6 @@ export function AuthStatus() {
       ? "/"
       : `${pathname}${query ? `?${query}` : ""}`;
 
-    // 店舗詳細（U03）からログイン・新規登録画面へ移動する場合、
-    // 「検索結果から来た」印を残したままにすると、ログイン後にU03へ戻った際、
-    // 「検索結果に戻る」がrouter.back()でログイン画面へ戻ってしまう。
-    // 検索結果以外の画面へ移動する時点で印を削除しておく。
-    const clearFromSearchMark = () => {
-      try {
-        sessionStorage.removeItem(FROM_SEARCH_STORAGE_KEY);
-      } catch {
-        // ignore
-      }
-    };
-
     return (
       <LoggedOutStatus
         nextPath={nextPath}
@@ -116,8 +115,12 @@ export function AuthStatus() {
     );
   }
 
+  // メモ一覧・お気に入りを「閉じた」あとの戻り先（決め方は resolveHeaderReturnTo を参照）
+  const returnTo = resolveHeaderReturnTo(pathname, searchParams);
+
   return (
     <LoggedInStatus
+      returnTo={returnTo}
       logoutAction={logoutAction}
       isLoggingOut={isLoggingOut}
       logoutError={logoutState.error}
@@ -152,6 +155,7 @@ export function LoggedOutStatus({
 }
 
 type LoggedInStatusProps = {
+  returnTo?: string;
   logoutAction: (formData: FormData) => void;
   isLoggingOut: boolean;
   logoutError: string | null;
@@ -159,16 +163,25 @@ type LoggedInStatusProps = {
 
 // ログイン時の表示（メモ一覧・お気に入りへの導線、ログイン状態、ログアウト）
 export function LoggedInStatus({
+  returnTo = "/",
   logoutAction,
   isLoggingOut,
   logoutError,
 }: LoggedInStatusProps) {
   return (
     <div className={styles.wrapper}>
-      <Link href="/notes" className={styles.authLink}>
+      <Link
+        href={buildListHref("/notes", returnTo)}
+        className={styles.authLink}
+        onClick={clearFromSearchMark}
+      >
         メモ一覧
       </Link>
-      <Link href="/favorites" className={styles.authLink}>
+      <Link
+        href={buildListHref("/favorites", returnTo)}
+        className={styles.authLink}
+        onClick={clearFromSearchMark}
+      >
         お気に入り
       </Link>
       <span className={styles.statusText}>ログイン中</span>

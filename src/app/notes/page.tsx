@@ -5,6 +5,11 @@ import { createClient as createServerSupabaseClient } from "@/lib/supabase/serve
 import { ListPageLayout } from "@/components/ListPageLayout";
 import listStyles from "@/components/ListPage.module.css";
 import { fetchOwnNotesWithStores } from "@/lib/queries/notes";
+import {
+  RETURN_TO_PARAM,
+  buildLoginHrefForList,
+  sanitizeReturnTo,
+} from "@/lib/return-to";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -21,18 +26,29 @@ function formatUpdatedAt(value: string): string {
   return `${year}年${month}月${day}日 ${hours}:${minutes}`;
 }
 
-export default async function NotesPage() {
+export default async function NotesPage(props: PageProps<"/notes">) {
+  // 「閉じる」の戻り先。一覧を開いた元の画面（U01〜U03）のURLで、検証に通らない場合はU01
+  const rawReturnTo = (await props.searchParams)[RETURN_TO_PARAM];
+  const returnTo = sanitizeReturnTo(
+    Array.isArray(rawReturnTo) ? rawReturnTo[0] : rawReturnTo,
+  );
+
   const supabaseServer = await createServerSupabaseClient();
   const { data, error } = await supabaseServer.auth.getClaims();
 
   if (error || !data?.claims) {
-    redirect("/login?next=/notes");
+    // ログイン後にこの一覧へ戻れるよう、戻り先も引き継ぐ
+    redirect(buildLoginHrefForList("/notes", returnTo));
   }
 
   const result = await fetchOwnNotesWithStores(supabaseServer);
 
   return (
-    <ListPageLayout title="メモ一覧">
+    <ListPageLayout
+      title="メモ一覧"
+      closeLabel="メモ一覧を閉じる"
+      returnTo={returnTo}
+    >
       {result.status === "error" && (
         <p role="alert">情報を取得できませんでした。もう一度お試しください</p>
       )}

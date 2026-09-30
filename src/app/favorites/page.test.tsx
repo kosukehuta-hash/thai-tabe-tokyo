@@ -73,6 +73,16 @@ function hasElementWith(node: ReactNode, predicate: (e: Element) => boolean) {
 
 const supabaseClient = { auth: {} };
 
+// ページに渡される props（URLのクエリは searchParams で受け取る）
+function props(
+  searchParams: Record<string, string | string[] | undefined> = {},
+): Parameters<typeof FavoritesPage>[0] {
+  return {
+    params: Promise.resolve({}),
+    searchParams: Promise.resolve(searchParams),
+  } as unknown as Parameters<typeof FavoritesPage>[0];
+}
+
 beforeEach(() => {
   mocks.createClient.mockResolvedValue(supabaseClient);
   mocks.getAuthenticatedUserId.mockResolvedValue("user-1");
@@ -93,15 +103,26 @@ afterEach(() => {
 describe("U07 お気に入り画面（/favorites）", () => {
   it("未ログイン → /login?next=/favorites へ移動し、お気に入りは取得しない", async () => {
     mocks.getAuthenticatedUserId.mockResolvedValue(null);
-    await expect(FavoritesPage()).rejects.toThrow(
+    await expect(FavoritesPage(props())).rejects.toThrow(
       "NEXT_REDIRECT:/login?next=/favorites",
     );
     expect(mocks.redirect).toHaveBeenCalledWith("/login?next=/favorites");
     expect(mocks.fetchOwnFavorites).not.toHaveBeenCalled();
   });
 
+  it("未ログイン＋戻り先あり → ログイン後にこの一覧へ戻れるよう、戻り先も引き継いで移動する", async () => {
+    mocks.getAuthenticatedUserId.mockResolvedValue(null);
+    const expected = `/login?next=${encodeURIComponent(
+      "/favorites?returnTo=%2Fstore%2F1%3Farea_id%3D1",
+    )}`;
+    await expect(
+      FavoritesPage(props({ returnTo: "/store/1?area_id=1" })),
+    ).rejects.toThrow(`NEXT_REDIRECT:${expected}`);
+    expect(mocks.fetchOwnFavorites).not.toHaveBeenCalled();
+  });
+
   it("ログイン済み → fetchOwnFavorites を1回だけ呼び、見出しは『お気に入り』の共通レイアウトで表示する", async () => {
-    const tree = await FavoritesPage();
+    const tree = await FavoritesPage(props());
     expect(mocks.fetchOwnFavorites).toHaveBeenCalledTimes(1);
     expect(mocks.fetchOwnFavorites).toHaveBeenCalledWith(supabaseClient);
     const layouts = findElements(tree, ListPageLayout);
@@ -109,9 +130,39 @@ describe("U07 お気に入り画面（/favorites）", () => {
     expect(layouts[0].props.title).toBe("お気に入り");
   });
 
+  it("ボタンの文言は『お気に入りを閉じる』（『← 戻る』ではない）", async () => {
+    const tree = await FavoritesPage(props());
+    const [layout] = findElements(tree, ListPageLayout);
+    expect(layout.props.closeLabel).toBe("お気に入りを閉じる");
+  });
+
+  it.each([
+    ["returnTo がない", {}, "/"],
+    [
+      "U02（検索条件付き）",
+      { returnTo: "/search?area_id=1&time=lunch" },
+      "/search?area_id=1&time=lunch",
+    ],
+    [
+      "U03（クエリ付き）",
+      { returnTo: "/store/123?area_id=1&time=lunch" },
+      "/store/123?area_id=1&time=lunch",
+    ],
+    ["U01", { returnTo: "/" }, "/"],
+    ["外部URL", { returnTo: "https://example.com" }, "/"],
+    ["プロトコル相対URL", { returnTo: "//example.com" }, "/"],
+    ["メモ一覧自身", { returnTo: "/notes" }, "/"],
+    ["不正な店舗ID", { returnTo: "/store/abc" }, "/"],
+    ["複数指定は先頭を使う", { returnTo: ["/search", "/store/1"] }, "/search"],
+  ])("閉じる先（%s）→ %s", async (_label, query, expected) => {
+    const tree = await FavoritesPage(props(query));
+    const [layout] = findElements(tree, ListPageLayout);
+    expect(layout.props.returnTo).toBe(expected);
+  });
+
   it("取得失敗 → 既存（U06）と同じ取得失敗の文言を role=alert で表示し、一覧は出さない", async () => {
     mocks.fetchOwnFavorites.mockResolvedValue({ status: "error" });
-    const tree = await FavoritesPage();
+    const tree = await FavoritesPage(props());
     expect(
       hasElementWith(
         tree,
@@ -126,7 +177,7 @@ describe("U07 お気に入り画面（/favorites）", () => {
   });
 
   it("0件 → 『まだお気に入りの店舗がありません』を表示する", async () => {
-    const tree = await FavoritesPage();
+    const tree = await FavoritesPage(props());
     expect(textOf(tree as ReactNode)).toContain(
       "まだお気に入りの店舗がありません",
     );
@@ -159,7 +210,7 @@ describe("U07 お気に入り画面（/favorites）", () => {
         },
       ],
     });
-    const tree = await FavoritesPage();
+    const tree = await FavoritesPage(props());
     const items = findElements(tree, FavoriteItem);
     expect(items.map((i) => i.props.storeId)).toEqual([9, 2, 7]);
     expect(items.map((i) => i.props.isPublished)).toEqual([true, false, true]);
@@ -182,7 +233,7 @@ describe("U07 お気に入り画面（/favorites）", () => {
         },
       ],
     });
-    const tree = await FavoritesPage();
+    const tree = await FavoritesPage(props());
     const [item] = findElements(tree, FavoriteItem);
     expect(Object.keys(item.props).sort()).toEqual([
       "isPublished",
