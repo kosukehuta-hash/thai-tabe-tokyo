@@ -12,14 +12,18 @@
   position: relative;
 }
 
-/* U03「検索結果に戻る」のヘッダー内表示(.headerBackLink)と同じデザイン系。
-   ヘッダー中央のロゴをflexの中央揃えのまま保つため、位置指定はabsoluteにする。
+/* 「閉じる」リンク。U03「検索結果に戻る」のヘッダー内表示(.headerBackLink)と同じデザイン系。
+   ヘッダー中央のロゴをflexの中央揃えのまま保つため、PC幅では位置指定をabsoluteにする。
    AuthStatus側のright:16px（.wrapperの既定値）を基準にしつつ、
-   微調整のうえleft:28pxを採用している */
-.headerBackButton {
+   微調整のうえleft:28pxを採用している。
+   囲みのdivはPC幅ではレイアウトに影響しない（display: contents） */
+.headerCloseRow {
+  display: contents;
+}
+
+.headerCloseLink {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   position: absolute;
   left: 28px;
   top: 50%;
@@ -32,16 +36,20 @@
   background-color: #ffffff;
   border: 1px solid #1f4d3a;
   border-radius: 999px;
+  text-decoration: none;
   cursor: pointer;
 }
 
-/* スマホ幅では認証表示が2段目に回り、ログイン時は「メモ一覧」「お気に入り」で横に広がる。
-   戻るボタンをヘッダー中央（1段目と2段目にまたがる位置）に置くと2段目の左端に被るため、
-   1段目（ロゴの行）だけに収まる位置へ上げる */
+/* スマホ幅では、文言が長くなった「閉じる」リンクが中央のロゴに被るため、
+   ヘッダー1行目を「閉じる」リンク専用にし、ロゴと認証表示はその下の行に回す */
 @media (max-width: 767px) {
-  .headerBackButton {
-    left: 10px;
-    top: 8px;
+  .headerCloseRow {
+    display: block;
+    flex: 0 0 100%;
+  }
+
+  .headerCloseLink {
+    position: static;
     transform: none;
     height: 36px;
     padding: 0 12px;
