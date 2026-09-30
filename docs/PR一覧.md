@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#87、実PR63件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#88、実PR64件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -70,3 +70,4 @@ GitHub上のPull Request（#1〜#87、実PR63件）を確認して作成した�
 | 85  | docs: CLAUDE.mdにGit安全ルールを追加                          | `CLAUDE.md`に「Git安全ルール」セクションを追加した、ブランチ操作・reset・rebase等の危険なGit操作の前に`git status`/`git diff`を確認すること、未com…                                | なし      | `npx prettier --check CLAUDE.md`：整形済みであることを確認、差分がCLAUDE.mdへの追記のみであることを確認                                                   | Merged | 2026-09-29 | 前PR（#84）のマージ作業中に`git reset --hard`で未commit変更を誤って破棄する事故が発生したた…              |
 | 86  | fix: 平田さん再レビューのセキュリティ・設定対応               | READMEにSupabase型定義再生成手順を追加、READMEにレビュー用共通アカウントのパスワード変更禁止注記を追加、`db:types`スクリプトを追加、Supabaseパスワード最小文字数を…                | なし      | typecheck：成功、lint：成功、build：成功、Vitest：45件成功、Playwright：42件成功                                                                          | Merged | 2026-09-29 | 平田さん再レビューで指摘された本番運用・セキュリティ・コード管理への対応をまとめたものです。              |
 | 87  | feat: U06メモ一覧を追加                                       | U06「メモ一覧」画面（`/notes`）を新規追加。ログイン本人が登録したメモを`updated_at`降順で全件表示する、表示項目：店舗名・メモ本文・更新日時・店舗詳細リンク（公開店舗のみ）、非公… | なし      | `npm run typecheck` / `npm run lint` / `npm run test`：いずれも成功、Vitest（`src/lib/que`…                                                               | Merged | 2026-09-29 | 既存の`stores`・`store_visit_notes`のRLS・GRANTは変更していません、`vitest.c`…                            |
+| 88  | docs: お気に入り機能の仕様確定（要件仕様書Ver2・CLAUDE.md）   | 要件仕様書 Ver2 にお気に入り機能（F09 / U07）を追加、store_favorites、get_own_favorites()、登録制限トリガーの仕様を追加、U03 のお気に入り登録・解除…                               | なし      | 今回は仕様書・CLAUDE.md の更新のみのため、アプリ・DBテストは未実施、確認済み: xlsx の既存セルに意図しない変更がないこと、確認済み: 埋め込み…              | Merged | 2026-09-30 | DB変更、migration作成、アプリ実装はこのPRには含めない、実装は仕様PRをmainへマージ後、別ブランチ・別P…     |
