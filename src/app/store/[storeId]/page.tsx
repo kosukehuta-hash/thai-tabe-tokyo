@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthStatus } from "@/components/AuthStatus";
 import { HeaderHomeLink } from "@/components/HeaderHomeLink";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { StoreVisitNote } from "@/components/StoreVisitNote";
 import BackToSearchLink from "./BackToSearchLink";
 import StoreBasicInfo from "./StoreBasicInfo";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/search-conditions";
 import { formatPriceForDetail, formatVerifiedDate } from "@/lib/format";
 import { getSceneLabels } from "@/lib/scene-labels";
+import { fetchIsFavorite } from "@/lib/queries/favorites";
 import {
   fetchExteriorPhoto,
   fetchInteriorPhotos,
@@ -103,11 +105,14 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
   const interiorPhotos = interiorPhotosResult.photos;
   const mainDishes = mainDishesResult.dishes;
 
-  // 自分のメモ取得と料理写真取得は、それぞれ上記の結果（currentUserId／mainDishes）にのみ
-  // 依存し、互いの結果を参照しないため並列実行する。
-  const [ownNoteResult, dishPhotosResult] = await Promise.all([
+  // 自分のメモ取得・お気に入り状態の取得・料理写真取得は、それぞれ上記の結果
+  // （currentUserId／mainDishes）にのみ依存し、互いの結果を参照しないため並列実行する。
+  const [ownNoteResult, favoriteResult, dishPhotosResult] = await Promise.all([
     currentUserId !== null
       ? fetchOwnNote(supabaseServer, store.store_id)
+      : Promise.resolve(null),
+    currentUserId !== null
+      ? fetchIsFavorite(supabaseServer, store.store_id)
       : Promise.resolve(null),
     mainDishes.length > 0
       ? fetchMainDishPhotos(
@@ -122,6 +127,7 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
 
   if (
     ownNoteResult?.status === "error" ||
+    favoriteResult?.status === "error" ||
     dishPhotosResult.status === "error"
   ) {
     return renderComError();
@@ -175,7 +181,15 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
 
             <div className={styles.rightColumn}>
               <div className={styles.infoCard}>
-                <h1 className={styles.storeName}>{store.store_name}</h1>
+                <div className={styles.storeHeader}>
+                  <h1 className={styles.storeName}>{store.store_name}</h1>
+                  {currentUserId !== null && favoriteResult && (
+                    <FavoriteButton
+                      storeId={store.store_id}
+                      initialIsFavorite={favoriteResult.isFavorite}
+                    />
+                  )}
+                </div>
                 <p className={styles.catchCopy}>{store.catch_copy}</p>
 
                 <StoreInfoRows

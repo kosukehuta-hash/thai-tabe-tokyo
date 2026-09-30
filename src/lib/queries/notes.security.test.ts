@@ -1,7 +1,13 @@
-import { execFileSync } from "node:child_process";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@/types/database.types";
+import {
+  deleteTestUsersByEmailLike,
+  isLocalSupabaseAvailable,
+  newAnonClient,
+  runPsql,
+  signUpTestUser,
+} from "@/lib/test/local-supabase";
 // "server-only" はvitest.config.tsのresolve.aliasでスタブに差し替えているため、
 // このファイルをVitestから直接importできる。
 import { fetchOwnNotesWithStores } from "./notes";
@@ -25,51 +31,6 @@ import { fetchOwnNotesWithStores } from "./notes";
  * テストで作成・変更したユーザー・メモ・is_publishedは、afterAllで必ず元に戻す。
  */
 
-const LOCAL_SUPABASE_URL =
-  process.env.TEST_LOCAL_SUPABASE_URL ?? "http://127.0.0.1:54321";
-const LOCAL_SUPABASE_ANON_KEY =
-  process.env.TEST_LOCAL_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-const LOCAL_DB_CONTAINER =
-  process.env.TEST_LOCAL_SUPABASE_DB_CONTAINER ?? "supabase_db_thai-tabe-tokyo";
-
-function newAnonClient(): SupabaseClient<Database> {
-  return createClient<Database>(LOCAL_SUPABASE_URL, LOCAL_SUPABASE_ANON_KEY);
-}
-
-function runPsql(sql: string): void {
-  execFileSync(
-    "docker",
-    [
-      "exec",
-      LOCAL_DB_CONTAINER,
-      "psql",
-      "-U",
-      "postgres",
-      "-d",
-      "postgres",
-      "-c",
-      sql,
-    ],
-    { stdio: "ignore", timeout: 10_000 },
-  );
-}
-
-async function isLocalSupabaseAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch(`${LOCAL_SUPABASE_URL}/auth/v1/health`, {
-      signal: AbortSignal.timeout(1500),
-    });
-    if (!res.ok) {
-      return false;
-    }
-    runPsql("select 1;");
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 const localAvailable = await isLocalSupabaseAvailable();
 
 describe.skipIf(!localAvailable)(
@@ -78,7 +39,6 @@ describe.skipIf(!localAvailable)(
     const RUN_ID = Date.now();
     const userAEmail = `vitest-notes-sec-${RUN_ID}-a@example.com`;
     const userBEmail = `vitest-notes-sec-${RUN_ID}-b@example.com`;
-    const password = "TestPassword123!";
     const noteTextA = `vitest-notes-sec-${RUN_ID} userAメモ`;
     const noteTextB = `vitest-notes-sec-${RUN_ID} userBメモ`;
 
@@ -105,26 +65,8 @@ describe.skipIf(!localAvailable)(
       }
       [storeIdA, storeIdB, storeIdNoNote] = stores.map((s) => s.store_id);
 
-      clientA = newAnonClient();
-      clientB = newAnonClient();
-
-      const { data: signUpA, error: signUpAError } = await clientA.auth.signUp({
-        email: userAEmail,
-        password,
-      });
-      if (signUpAError || !signUpA.user) {
-        throw new Error(`userA作成に失敗: ${signUpAError?.message}`);
-      }
-      userAId = signUpA.user.id;
-
-      const { data: signUpB, error: signUpBError } = await clientB.auth.signUp({
-        email: userBEmail,
-        password,
-      });
-      if (signUpBError || !signUpB.user) {
-        throw new Error(`userB作成に失敗: ${signUpBError?.message}`);
-      }
-      userBId = signUpB.user.id;
+      ({ client: clientA, userId: userAId } = await signUpTestUser(userAEmail));
+      ({ client: clientB, userId: userBId } = await signUpTestUser(userBEmail));
 
       const { error: insertAError } = await clientA
         .from("store_visit_notes")
@@ -149,9 +91,7 @@ describe.skipIf(!localAvailable)(
       runPsql(
         `delete from public.store_visit_notes where note_text like 'vitest-notes-sec-${RUN_ID}%';`,
       );
-      runPsql(
-        `delete from auth.users where email like 'vitest-notes-sec-${RUN_ID}-%@example.com';`,
-      );
+      deleteTestUsersByEmailLike(`vitest-notes-sec-${RUN_ID}-%@example.com`);
     });
 
     it("TC-SEC-10: 本人＋公開店舗のメモは店舗名を取得できる", async () => {

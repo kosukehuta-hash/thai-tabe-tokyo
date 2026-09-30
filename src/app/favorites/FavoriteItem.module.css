@@ -1,0 +1,47 @@
+.removeForm {
+  display: flex;
+  /* 店舗名が長くてボタンが次の行に回ったときも右寄せにそろえる */
+  margin-left: auto;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #b3261e;
+  background-color: #ffffff;
+  color: #b3261e;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #b3261e;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .removeButton:hover:not(:disabled) {
+    background-color: #fdf2f0;
+  }
+}
+
+@media (max-width: 767px) {
+  .removeButton {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+}

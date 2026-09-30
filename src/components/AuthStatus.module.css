@@ -19,6 +19,8 @@
      フローに参加しないため、この値は効果を持たない。 */
   flex-basis: var(--auth-status-flex-basis, auto);
   display: flex;
+  /* リンクが増えても、幅が足りない画面（320px前後など）では自然に折り返す */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 8px;

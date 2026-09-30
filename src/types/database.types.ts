@@ -118,6 +118,35 @@ export type Database = {
           },
         ]
       }
+      store_favorites: {
+        Row: {
+          created_at: string
+          favorite_id: number
+          store_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          favorite_id?: never
+          store_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          favorite_id?: never
+          store_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_favorites_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["store_id"]
+          },
+        ]
+      }
       store_photos: {
         Row: {
           alt_text: string
@@ -313,6 +342,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_own_favorites: {
+        Args: never
+        Returns: {
+          created_at: string
+          is_published: boolean
+          store_id: number
+          store_name: string
+        }[]
+      }
       get_own_note_store_names: {
         Args: { p_store_ids: number[] }
         Returns: {

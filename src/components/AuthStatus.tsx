@@ -109,29 +109,67 @@ export function AuthStatus() {
     };
 
     return (
-      <div className={styles.wrapper}>
-        <Link
-          href={`/login?next=${encodeURIComponent(nextPath)}`}
-          className={styles.authLink}
-          onClick={clearFromSearchMark}
-        >
-          ログイン
-        </Link>
-        <Link
-          href="/signup"
-          className={styles.authLink}
-          onClick={clearFromSearchMark}
-        >
-          新規登録
-        </Link>
-      </div>
+      <LoggedOutStatus
+        nextPath={nextPath}
+        onNavigateAway={clearFromSearchMark}
+      />
     );
   }
 
   return (
+    <LoggedInStatus
+      logoutAction={logoutAction}
+      isLoggingOut={isLoggingOut}
+      logoutError={logoutState.error}
+    />
+  );
+}
+
+type LoggedOutStatusProps = {
+  nextPath: string;
+  onNavigateAway: () => void;
+};
+
+// 未ログイン時の表示（ログイン・新規登録への導線）
+export function LoggedOutStatus({
+  nextPath,
+  onNavigateAway,
+}: LoggedOutStatusProps) {
+  return (
+    <div className={styles.wrapper}>
+      <Link
+        href={`/login?next=${encodeURIComponent(nextPath)}`}
+        className={styles.authLink}
+        onClick={onNavigateAway}
+      >
+        ログイン
+      </Link>
+      <Link href="/signup" className={styles.authLink} onClick={onNavigateAway}>
+        新規登録
+      </Link>
+    </div>
+  );
+}
+
+type LoggedInStatusProps = {
+  logoutAction: (formData: FormData) => void;
+  isLoggingOut: boolean;
+  logoutError: string | null;
+};
+
+// ログイン時の表示（メモ一覧・お気に入りへの導線、ログイン状態、ログアウト）
+export function LoggedInStatus({
+  logoutAction,
+  isLoggingOut,
+  logoutError,
+}: LoggedInStatusProps) {
+  return (
     <div className={styles.wrapper}>
       <Link href="/notes" className={styles.authLink}>
         メモ一覧
+      </Link>
+      <Link href="/favorites" className={styles.authLink}>
+        お気に入り
       </Link>
       <span className={styles.statusText}>ログイン中</span>
       <form action={logoutAction}>
@@ -143,9 +181,9 @@ export function AuthStatus() {
           {isLoggingOut ? "ログアウト中..." : "ログアウト"}
         </button>
       </form>
-      {logoutState.error && (
+      {logoutError && (
         <p className={styles.error} role="alert">
-          {logoutState.error}
+          {logoutError}
         </p>
       )}
     </div>
