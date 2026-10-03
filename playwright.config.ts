@@ -4,6 +4,10 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: "./e2e",
+  // account-delete.spec.ts は、アカウントを実際に削除するため、ローカルSupabaseだけで実行する。
+  // CIでは「スキップが1件でもあれば失敗」とする検査（scripts/check-e2e-skips.mjs）があるため、
+  // スキップ扱いにせず、CIでは最初から実行対象に含めない
+  testIgnore: isCI ? ["**/account-delete.spec.ts"] : [],
   fullyParallel: true,
   retries: 0,
   reporter: isCI
