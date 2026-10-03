@@ -18,6 +18,8 @@ import {
 
 export type StoreDisplayInfo = Store & {
   photo: StorePhoto | null;
+  // 提供中の料理（store_dishes.is_available=TRUE）が1件以上あるか
+  hasDishes: boolean;
   otherDishText: string | null;
   mainDishText: string | null;
   lunchInfo: { hours: string | null; priceText: string | null } | null;
@@ -94,6 +96,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
     return {
       ...store,
       photo,
+      hasDishes: dishes.length > 0,
       otherDishText,
       mainDishText,
       lunchInfo,

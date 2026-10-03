@@ -101,4 +101,44 @@ test.describe("U01 トップページ 検索条件選択", () => {
       await expect(allButton).toHaveAttribute("aria-pressed", "true");
     }
   });
+
+  test("TC-COM-06（U01）: 検索ボタンを連打しても検索は1回だけで、処理中はボタンが無効になり『検索中...』と表示される", async ({
+    page,
+  }) => {
+    // 検索結果ページの取得を遅らせ、処理中の状態を観察できるようにする
+    const searchRequests: string[] = [];
+    await page.route("**/search**", async (route) => {
+      const request = route.request();
+      if (
+        request.method() === "GET" &&
+        new URL(request.url()).pathname === "/search"
+      ) {
+        searchRequests.push(request.url());
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
+      await route.continue();
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const searchButton = page.getByRole("button", {
+      name: "店舗を検索する",
+    });
+    // ハイドレーション完了前のクリックは効かないため、処理中表示になるまで再試行する
+    const busyButton = page.getByRole("button", { name: "検索中..." });
+    await expect(async () => {
+      await searchButton.click({ timeout: 1000 }).catch(() => {});
+      await expect(busyButton).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 15000 });
+
+    await expect(busyButton).toBeDisabled();
+
+    // 処理中に連打しても、検索処理は増えない
+    await busyButton.click({ force: true, noWaitAfter: true }).catch(() => {});
+    await busyButton.click({ force: true, noWaitAfter: true }).catch(() => {});
+
+    await page.waitForURL((url) => url.pathname === "/search");
+    expect(searchRequests).toHaveLength(1);
+  });
 });

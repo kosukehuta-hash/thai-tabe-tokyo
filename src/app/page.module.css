@@ -393,6 +393,11 @@
   width: 100%;
 }
 
+.searchButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .resetLink {
   min-height: 44px;
   padding: 0 12px;
@@ -409,7 +414,7 @@
     border-color: var(--primary);
   }
 
-  .searchButton:hover {
+  .searchButton:hover:not(:disabled) {
     background-color: var(--primary-hover);
   }
 

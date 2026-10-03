@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -187,6 +193,15 @@ export default function SearchForm({
   initialDishId,
 }: SearchFormProps) {
   const router = useRouter();
+  const [isSearching, startSearchTransition] = useTransition();
+  // 描画の反映前に連打された場合も、検索処理を1回だけにするための印
+  const searchStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isSearching) {
+      searchStartedRef.current = false;
+    }
+  }, [isSearching]);
 
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(
     initialAreaId,
@@ -209,14 +224,19 @@ export default function SearchForm({
   }
 
   function handleSearch() {
-    router.push(
-      buildSearchHref({
-        areaId: selectedAreaId,
-        time: selectedTime,
-        scene: selectedScene,
-        dishId: selectedDishId,
-      }),
-    );
+    if (searchStartedRef.current) {
+      return;
+    }
+    searchStartedRef.current = true;
+    const href = buildSearchHref({
+      areaId: selectedAreaId,
+      time: selectedTime,
+      scene: selectedScene,
+      dishId: selectedDishId,
+    });
+    startSearchTransition(() => {
+      router.push(href);
+    });
   }
 
   return (
@@ -335,9 +355,10 @@ export default function SearchForm({
           type="button"
           className={styles.searchButton}
           onClick={handleSearch}
+          disabled={isSearching}
         >
           <SearchIcon />
-          店舗を検索する
+          {isSearching ? "検索中..." : "店舗を検索する"}
         </button>
         <button
           type="button"

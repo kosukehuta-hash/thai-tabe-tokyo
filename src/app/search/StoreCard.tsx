@@ -38,7 +38,7 @@ export default function StoreCard({
   return (
     <div className={styles.card}>
       <div className={styles.photoWrapper}>
-        {store.photo ? (
+        {store.hasDishes && store.photo ? (
           <>
             <Image
               src={store.photo.photoUrl}
@@ -60,7 +60,10 @@ export default function StoreCard({
           </>
         ) : (
           <div className={styles.photoPlaceholder}>
-            {!isDishSelected ? "店舗写真準備中" : "料理写真準備中"}
+            {/* 提供中の料理がない店舗も「料理写真準備中」とする（U02 店舗カード 料理写真の表示ルール） */}
+            {!store.hasDishes || isDishSelected
+              ? "料理写真準備中"
+              : "店舗写真準備中"}
           </div>
         )}
       </div>
