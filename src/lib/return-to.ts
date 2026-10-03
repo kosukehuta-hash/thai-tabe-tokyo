@@ -1,6 +1,6 @@
 import { sanitizeNextPath } from "@/lib/safe-next-path";
 
-// U06 メモ一覧・U07 お気に入りを「閉じた」あとの戻り先（returnTo）を扱う。
+// U06 メモ一覧・U07 お気に入り・U08 アカウント削除を「閉じた」あとの戻り先（returnTo）を扱う。
 // 戻り先は、一覧を開いた元の画面（U01・U02・U03）のURLだけを許可する。
 // クエリパラメータの値は信用せず、ここで検証してから使う。
 export const RETURN_TO_PARAM = "returnTo";
@@ -35,9 +35,13 @@ export function sanitizeReturnTo(value: string | null | undefined): string {
   return `${url.pathname}${url.search}`;
 }
 
-// 一覧画面（U06・U07）へのリンク先を作る。戻り先がU01（既定値）の場合は付けない
+// 戻り先（returnTo）を付けて開く画面（U06・U07・U08）のパス
+export type ReturnToPagePath = "/notes" | "/favorites" | "/account/delete";
+
+// 一覧画面（U06・U07）やアカウント削除画面（U08）へのリンク先を作る。
+// 戻り先がU01（既定値）の場合は付けない
 export function buildListHref(
-  listPath: "/notes" | "/favorites",
+  listPath: ReturnToPagePath,
   returnTo: string,
 ): string {
   const safe = sanitizeReturnTo(returnTo);
@@ -47,11 +51,12 @@ export function buildListHref(
   return `${listPath}?${RETURN_TO_PARAM}=${encodeURIComponent(safe)}`;
 }
 
-// 未ログインで一覧画面（U06・U07）を開いたときの、ログイン画面へのリンク先を作る。
+// 未ログインで一覧画面（U06・U07）やアカウント削除画面（U08）を開いたときの、
+// ログイン画面へのリンク先を作る。
 // 戻り先がU01（既定値）の場合は従来どおり /login?next=/notes などの形にする。
 // 戻り先がある場合は、ログイン後にその一覧へ戻れるよう戻り先ごとエンコードして引き継ぐ
 export function buildLoginHrefForList(
-  listPath: "/notes" | "/favorites",
+  listPath: ReturnToPagePath,
   returnTo: string,
 ): string {
   const listHref = buildListHref(listPath, returnTo);
@@ -60,11 +65,11 @@ export function buildLoginHrefForList(
     : `/login?next=${encodeURIComponent(listHref)}`;
 }
 
-// ヘッダーの「メモ一覧」「お気に入り」リンクに付ける戻り先を決める。
+// ヘッダーの「メモ一覧」「お気に入り」「アカウント削除」リンクに付ける戻り先を決める。
 // U01〜U03では、いま見ている画面（検索条件などのクエリ付き）を戻り先にする。
-// U06・U07では、自分自身ではなく受け取った戻り先をそのまま引き継ぐ
-// （U06とU07を行き来しても、最初のU01〜U03を戻り先として維持するため）
-const LIST_PATHNAMES = new Set(["/notes", "/favorites"]);
+// U06・U07・U08では、自分自身ではなく受け取った戻り先をそのまま引き継ぐ
+// （U06・U07・U08を行き来しても、最初のU01〜U03を戻り先として維持するため）
+const LIST_PATHNAMES = new Set(["/notes", "/favorites", "/account/delete"]);
 
 export function resolveHeaderReturnTo(
   pathname: string,

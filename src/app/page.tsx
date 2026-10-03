@@ -8,6 +8,7 @@ import {
   type MasterDish,
 } from "@/lib/queries/masters";
 import SearchForm from "./SearchForm";
+import { WithdrawnNotice } from "./WithdrawnNotice";
 import styles from "./page.module.css";
 
 export type Area = MasterArea;
@@ -55,6 +56,8 @@ export default async function Home(props: PageProps<"/">) {
           </span>
           <AuthStatus />
         </div>
+
+        <WithdrawnNotice withdrawn={rawSearchParams.withdrawn} />
 
         <div className={styles.heroBand}>
           <Image

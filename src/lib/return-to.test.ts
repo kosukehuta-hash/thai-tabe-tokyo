@@ -184,3 +184,56 @@ describe("resolveHeaderReturnTo（ヘッダーのリンクに付ける戻り先�
     ).toBe("/store/5?area_id=1&time=lunch");
   });
 });
+
+describe("アカウント削除画面（U08）の戻り先", () => {
+  const params = (query: string) => new URLSearchParams(query);
+
+  it("buildListHref：戻り先がU01なら付けず、U02・U03なら returnTo として付ける", () => {
+    expect(buildListHref("/account/delete", "/")).toBe("/account/delete");
+    expect(buildListHref("/account/delete", "/search?area_id=1")).toBe(
+      "/account/delete?returnTo=%2Fsearch%3Farea_id%3D1",
+    );
+    expect(buildListHref("/account/delete", "/store/1?area_id=1")).toBe(
+      "/account/delete?returnTo=%2Fstore%2F1%3Farea_id%3D1",
+    );
+  });
+
+  it("buildListHref：不正な戻り先（外部URL・アカウント削除画面自身）は付けない", () => {
+    expect(buildListHref("/account/delete", "https://example.com")).toBe(
+      "/account/delete",
+    );
+    expect(buildListHref("/account/delete", "/account/delete")).toBe(
+      "/account/delete",
+    );
+  });
+
+  it("buildLoginHrefForList：戻り先がなければ /login?next=/account/delete、あれば戻り先ごと引き継ぐ", () => {
+    expect(buildLoginHrefForList("/account/delete", "/")).toBe(
+      "/login?next=/account/delete",
+    );
+    expect(buildLoginHrefForList("/account/delete", "/store/1?area_id=1")).toBe(
+      `/login?next=${encodeURIComponent("/account/delete?returnTo=%2Fstore%2F1%3Farea_id%3D1")}`,
+    );
+  });
+
+  it("resolveHeaderReturnTo：U08では自分自身ではなく、受け取った戻り先を引き継ぐ", () => {
+    expect(
+      resolveHeaderReturnTo(
+        "/account/delete",
+        params("returnTo=%2Fsearch%3Farea_id%3D1"),
+      ),
+    ).toBe("/search?area_id=1");
+    expect(resolveHeaderReturnTo("/account/delete", params(""))).toBe("/");
+    expect(
+      resolveHeaderReturnTo(
+        "/account/delete",
+        params("returnTo=https%3A%2F%2Fexample.com"),
+      ),
+    ).toBe("/");
+  });
+
+  it("sanitizeReturnTo：アカウント削除画面そのものは戻り先として許可しない", () => {
+    expect(sanitizeReturnTo("/account/delete")).toBe("/");
+    expect(sanitizeReturnTo("/account/delete?returnTo=%2F")).toBe("/");
+  });
+});

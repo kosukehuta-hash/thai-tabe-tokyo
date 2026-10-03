@@ -115,7 +115,7 @@ export function AuthStatus() {
     );
   }
 
-  // メモ一覧・お気に入りを「閉じた」あとの戻り先（決め方は resolveHeaderReturnTo を参照）
+  // メモ一覧・お気に入り・アカウント削除を「閉じた」あとの戻り先（決め方は resolveHeaderReturnTo を参照）
   const returnTo = resolveHeaderReturnTo(pathname, searchParams);
 
   return (
@@ -161,7 +161,7 @@ type LoggedInStatusProps = {
   logoutError: string | null;
 };
 
-// ログイン時の表示（メモ一覧・お気に入りへの導線、ログイン状態、ログアウト）
+// ログイン時の表示（メモ一覧・お気に入りへの導線、ログイン状態、ログアウト、アカウント削除への導線）
 export function LoggedInStatus({
   returnTo = "/",
   logoutAction,
@@ -194,6 +194,13 @@ export function LoggedInStatus({
           {isLoggingOut ? "ログアウト中..." : "ログアウト"}
         </button>
       </form>
+      <Link
+        href={buildListHref("/account/delete", returnTo)}
+        className={styles.authLink}
+        onClick={clearFromSearchMark}
+      >
+        アカウント削除
+      </Link>
       {logoutError && (
         <p className={styles.error} role="alert">
           {logoutError}

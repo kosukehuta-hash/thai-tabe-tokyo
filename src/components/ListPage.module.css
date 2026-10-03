@@ -40,9 +40,9 @@
   cursor: pointer;
 }
 
-/* スマホ幅では、文言が長くなった「閉じる」リンクが中央のロゴに被るため、
+/* 899px以下では、文言が長くなった「閉じる」リンクが中央のロゴや、2段表示にした認証表示に被るため、
    ヘッダー1行目を「閉じる」リンク専用にし、ロゴと認証表示はその下の行に回す */
-@media (max-width: 767px) {
+@media (max-width: 899px) {
   .headerCloseRow {
     display: block;
     flex: 0 0 100%;
@@ -57,7 +57,11 @@
   }
 }
 
-@media (max-width: 899px) {
+/* 1099px以下は、中央ロゴと右側の認証表示（既定right:16px）の間隔が狭くなるため、
+   AuthStatusを通常フローへ戻し、ロゴの次の行に回す（1100px以上は間隔が約14px以上ある）。
+   ログイン時の認証表示に「お気に入り」「アカウント削除」リンクが加わって横幅が広がったため、
+   以前の899pxから引き上げた。 */
+@media (max-width: 1099px) {
   .headerBand {
     --auth-status-position: relative;
     --auth-status-top: auto;

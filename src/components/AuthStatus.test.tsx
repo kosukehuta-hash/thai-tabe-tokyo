@@ -40,17 +40,22 @@ describe("LoggedInStatus（ログイン時）", () => {
     />,
   );
 
-  it("『メモ一覧』の右側に『お気に入り』のリンクを表示する（順序：メモ一覧 → お気に入り）", () => {
+  it("『メモ一覧』の右側に『お気に入り』、ログアウトの右側に『アカウント削除』のリンクを表示する", () => {
     expect(links(html)).toEqual([
       ["/notes", "メモ一覧"],
       ["/favorites", "お気に入り"],
+      ["/account/delete", "アカウント削除"],
     ]);
   });
 
-  it("お気に入りの右側にログイン状態とログアウトボタンが続く", () => {
-    const order = ["メモ一覧", "お気に入り", "ログイン中", "ログアウト"].map(
-      (text) => html.indexOf(text),
-    );
+  it("お気に入りの右側にログイン状態とログアウトボタンが続き、その右側にアカウント削除が続く", () => {
+    const order = [
+      "メモ一覧",
+      "お気に入り",
+      "ログイン中",
+      "ログアウト",
+      "アカウント削除",
+    ].map((text) => html.indexOf(text));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
@@ -96,18 +101,20 @@ describe("LoggedInStatus の戻り先（returnTo）", () => {
     expect(links(render("/"))).toEqual([
       ["/notes", "メモ一覧"],
       ["/favorites", "お気に入り"],
+      ["/account/delete", "アカウント削除"],
     ]);
   });
 
-  it("U02から開く場合は、検索条件付きのURLを returnTo として両方のリンクに付ける", () => {
+  it("U02から開く場合は、検索条件付きのURLを returnTo として全てのリンクに付ける", () => {
     const returnTo = encodeURIComponent("/search?area_id=1&time=lunch");
     expect(links(render("/search?area_id=1&time=lunch"))).toEqual([
       [`/notes?returnTo=${returnTo}`, "メモ一覧"],
       [`/favorites?returnTo=${returnTo}`, "お気に入り"],
+      [`/account/delete?returnTo=${returnTo}`, "アカウント削除"],
     ]);
   });
 
-  it("U03から開く場合は、その店舗詳細のURLを returnTo として両方のリンクに付ける", () => {
+  it("U03から開く場合は、その店舗詳細のURLを returnTo として全てのリンクに付ける", () => {
     const html = render("/store/123?area_id=1&time=lunch");
     expect(html).toContain(
       "/notes?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
@@ -115,16 +122,19 @@ describe("LoggedInStatus の戻り先（returnTo）", () => {
     expect(html).toContain(
       "/favorites?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
     );
+    expect(html).toContain(
+      "/account/delete?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
+    );
   });
 
-  it("不正な戻り先（外部URL・一覧画面自身）は付けない", () => {
-    expect(links(render("https://example.com"))).toEqual([
+  it("不正な戻り先（外部URL・一覧画面・アカウント削除画面自身）は付けない", () => {
+    const plain = [
       ["/notes", "メモ一覧"],
       ["/favorites", "お気に入り"],
-    ]);
-    expect(links(render("/notes"))).toEqual([
-      ["/notes", "メモ一覧"],
-      ["/favorites", "お気に入り"],
-    ]);
+      ["/account/delete", "アカウント削除"],
+    ];
+    expect(links(render("https://example.com"))).toEqual(plain);
+    expect(links(render("/notes"))).toEqual(plain);
+    expect(links(render("/account/delete"))).toEqual(plain);
   });
 });

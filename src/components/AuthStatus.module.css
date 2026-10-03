@@ -23,7 +23,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  /* 横幅に余裕がない画面では、配置元のheaderBandが--auth-status-gapで間隔を詰められる */
+  gap: var(--auth-status-gap, 8px);
   min-height: 28px;
   min-width: 90px;
 }

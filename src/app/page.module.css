@@ -42,9 +42,13 @@
   background-color: var(--header-background);
   border-bottom: 1px solid var(--border);
   position: relative;
+  /* 左右の装飾画像（.heroDecoration）はヒーロー帯の中央に置かれ、上端がヘッダーへ食い込む。
+     認証表示を1段（ロゴと同じ行の右端）に置いても装飾画像と重ならないよう、
+     ヘッダーを装飾画像より前面に出し、装飾画像の上端をヘッダーの下端で切る。 */
+  z-index: 2;
 }
 
-/* 1770px未満は、ロゴと右側装飾（下のmin-width:768pxを参照）の間に
+/* 1280px未満は、ロゴと右端の認証表示（下のmin-width:1280pxを参照）の間に
    認証表示を並べる横幅が確保できないため、AuthStatusを絶対配置から
    通常フローへ戻す。flex-basis:100%を強制することで、ロゴとの
    合計幅がコンテナに収まる場合でも同じ行に並ばず、必ずロゴの次の
@@ -52,9 +56,10 @@
    positionはstaticではなくrelativeにし、top/rightはautoにして
    通常フロー上の位置から動かさない。relativeにするのは、
    AuthStatus内のエラー表示の絶対配置基準を.wrapper自身に保つため。
-   ログイン時の認証表示に「お気に入り」リンクが加わって横幅が広がったため、
-   以前の1600pxから、ロゴとの間隔が約14px以上になる1770pxへ引き上げた。 */
-@media (max-width: 1769px) {
+   ログイン時の認証表示に「お気に入り」「アカウント削除」リンクが加わって横幅が広がったため、
+   以前の1600pxから1280pxへ引き上げた。1280px以上は、下のmin-width:1280pxで
+   リンク間隔・右余白を詰めて、ロゴとの間隔を約12px以上確保し、1段表示（U02・U03と同じ）にする。 */
+@media (max-width: 1279px) {
   .headerBand {
     --auth-status-position: relative;
     --auth-status-top: auto;
@@ -484,6 +489,19 @@
   }
 }
 
+/* 認証表示を1段表示（1280px以上）にするときは、U02・U03と同じ右端に置く。
+   ロゴは大きいため、「メモ一覧」「お気に入り」「ログイン中」「ログアウト」「アカウント削除」が
+   1280pxでもロゴと重ならないよう、右余白（既定16px）を12px、リンク間隔（既定8px）を6pxに詰める。
+   右側の装飾画像との重なりは、.headerBandのz-indexで避けている。
+   1280px未満（2段表示）では --auth-status-right を auto のままにする。
+   以前はこの指定が768px以上の全幅に効き、2段表示でも認証表示が左へずれていた。 */
+@media (min-width: 1280px) {
+  .headerBand {
+    --auth-status-right: 12px;
+    --auth-status-gap: 6px;
+  }
+}
+
 @media (min-width: 768px) {
   .logoIcon {
     width: 76px;
@@ -501,13 +519,6 @@
 
   .heroDecorationRight {
     width: clamp(185px, 20vw, 330px);
-  }
-
-  /* 認証表示は右側に残しつつ、右側装飾（上と同じclamp幅）の左に
-     16pxの余白を空けて配置する。装飾の実際の幅と同じ式を使うことで、
-     768px〜1920px超まで一貫して装飾の上に重ならないようにする。 */
-  .headerBand {
-    --auth-status-right: calc(clamp(185px, 20vw, 330px) + 16px);
   }
 
   .heroBand {
