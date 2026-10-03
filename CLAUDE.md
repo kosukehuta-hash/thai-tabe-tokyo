@@ -10,9 +10,11 @@
 - 仕様変更が必要な場合は、勝手に変更せず確認する
 
 ## 対象機能
-- 対象機能はU01〜U07（U06 メモ一覧、U07 お気に入りを含む）、検索、画面遷移、認証（サインアップ・ログイン・ログアウト）、店舗メモCRUDとする
+- 対象機能はU01〜U08（U06 メモ一覧、U07 お気に入り、U08 アカウント削除を含む）、検索、画面遷移、認証（サインアップ・ログイン・ログアウト）、店舗メモCRUDとする
 - お気に入り機能（U07 お気に入り画面、U03のお気に入り登録・解除）も対象機能とする
 - お気に入りはログインユーザー本人だけが登録・解除でき、更新機能はない（1ユーザー・1店舗につき1件）。非公開店舗は新規登録できず、登録後に非公開になってもお気に入り行は残す（U07では「非公開」と表示し、詳細リンクは表示しない）。詳細は要件仕様書 Ver2 を正とする
+- アカウント削除（退会）機能（F10 / U08 `/account/delete`）も対象機能とする
+- アカウント削除はログイン中の本人だけが実行できる。確認チェックボックスにチェックするまで削除ボタンは無効で、削除に成功するとセッションを破棄してU01へ遷移し、`/?withdrawn=1` で「退会しました」を表示する。メモ・お気に入りは `ON DELETE CASCADE` で削除され、削除後は同じメールアドレスで再登録できる。詳細は要件仕様書 Ver2 を正とする
 - 仕様書にない機能や技術を独自に追加しない
 
 ## 技術構成
@@ -24,14 +26,22 @@
 ## DB
 - DBはareas、dishes、stores、store_dishes、store_photosの既存5テーブルに、store_visit_notes（店舗メモ）、store_favorites（お気に入り）を加えた7テーブルとする
 - auth.usersはSupabaseが管理する組み込みテーブルであり、独自migrationの作成対象外とする
+- アカウント削除（F10 / U08）ではDB変更・migrationを行わない（store_visit_notes・store_favoritesの既存の `ON DELETE CASCADE` を利用する）
 - walk_minutesは手入力とし、地図APIを追加しない
 
 ## 環境変数・セキュリティ
 - ブラウザで使用する環境変数はNEXT_PUBLIC_SUPABASE_URLとNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEYだけ
 - 認証機能を追加しても、上記2つ以外の公開環境変数は追加しない
-- SUPABASE_SECRET_KEYとSUPABASE_SERVICE_ROLE_KEYはMVPで設定・使用・出力しない（認証・店舗メモ・お気に入り機能でも同様とする）
+- SUPABASE_SERVICE_ROLE_KEYはMVPで設定・使用・出力しない（アカウント削除機能でも使用しない）
+- SUPABASE_SECRET_KEYは、認証・店舗メモ・お気に入り機能を含め、原則としてMVPで設定・使用・出力しない
+- **例外：アカウント削除機能（F10 / U08）だけは、Supabase Auth Admin APIの `auth.admin.deleteUser()` を使うため、サーバー側でのみ `SUPABASE_SECRET_KEY` の使用を許可する。** 次の条件をすべて守る
+  - 使用するのは `SUPABASE_SECRET_KEY` のみ（`SUPABASE_SERVICE_ROLE_KEY` は使わない）
+  - サーバー側の専用モジュール1か所だけで使い、Client Component・ブラウザ・proxy.tsでは使わない。`NEXT_PUBLIC_` を付けない
+  - 使用するAdmin APIは `auth.admin.deleteUser()` のみ（ユーザー一覧の取得など他の管理操作は使わない）
+  - 削除対象のユーザーIDは、ログイン中ユーザーの検証済みJWTから取得したIDだけを使う。フォーム値・URLパラメータなどからユーザーIDを受け取らない
+  - 実値のVercel Environment Variablesへの登録は、実装とローカル確認が完了してから、本番デプロイ前に行う
 - 環境変数の実値は、ローカルでは.env.local、本番ではVercel Environment Variablesだけに保存し、コード、GitHub、仕様書、README、CLAUDE.md、チャット、通常ログには記載・出力しない
-- .env.localはGit管理対象外とし、.env.exampleには使用する2つの環境変数名だけを記載して実値は入れない
+- .env.localはGit管理対象外とし、.env.exampleには使用する環境変数名（NEXT_PUBLIC_SUPABASE_URL、NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY、SUPABASE_SECRET_KEY）だけを記載して実値は入れない
 
 ## 進め方
 - 仕様にない判断が必要な場合は、推測せず作業を止めて確認する
