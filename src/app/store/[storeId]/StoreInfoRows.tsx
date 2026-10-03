@@ -25,19 +25,19 @@ export default function StoreInfoRows({
         </div>
       )}
 
-      <div className={styles.infoRow}>
-        <Image
-          src="/images/store-spice-icon.png"
-          alt=""
-          width={32}
-          height={32}
-          className={styles.infoRowIconImage}
-        />
-        <span className={styles.infoRowLabel}>辛さ対応</span>
-        <span className={styles.infoRowValue}>
-          {spiceSupportText?.trim() ? spiceSupportText : "未確認"}
-        </span>
-      </div>
+      {spiceSupportText?.trim() && (
+        <div className={styles.infoRow}>
+          <Image
+            src="/images/store-spice-icon.png"
+            alt=""
+            width={32}
+            height={32}
+            className={styles.infoRowIconImage}
+          />
+          <span className={styles.infoRowLabel}>辛さ対応</span>
+          <span className={styles.infoRowValue}>{spiceSupportText}</span>
+        </div>
+      )}
 
       {reservationText !== null && (
         <div className={styles.infoRow}>
