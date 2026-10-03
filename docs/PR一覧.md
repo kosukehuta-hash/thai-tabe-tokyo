@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#94、実PR67件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#96、実PR68件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -74,3 +74,4 @@ GitHub上のPull Request（#1〜#94、実PR67件）を確認して作成した�
 | 90  | feat: お気に入り機能を追加（F09 / U07）                                               | ログイン中の利用者が店舗をお気に入りに登録・解除でき、専用画面（U07）で一覧確認・解除できる「お気に入り機能」（F09 / U07）を追加する。要件仕様書 Ver2（PR #88 で確定）に基づく実…     | Closes #89 | **Vitest**：14ファイル・**153件すべて成功**（お気に入りDB基盤22件＋取得処理6件＋Server Action21件＋ボタン11件＋U03組…                                     | Merged | 2026-09-30 | **注意（本番Supabaseへの適用）**、**本番Supabaseへのmigration（`202609301531`…                            |
 | 92  | fix: 一覧画面を元の画面へ閉じる導線に変更                                             | U06「メモ一覧」・U07「お気に入り」の「← 戻る」（ブラウザ履歴ベース）を、「一覧画面を閉じて元の画面へ戻る」動作に変更する。、**主な変更**、U06 のボタンを「メモ一覧を閉じる」、U07 の… | Closes #91 | **Vitest：17ファイル・223件すべて成功**（新規：`return-to.test.ts` 41件・`ListPageLayout.test.tsx`…                                                       | Merged | 2026-09-30 | **DB変更なし・migrationなし・本番Supabase変更なし**、`next.config.ts` はローカル…                         |
 | 94  | docs: アカウント削除（退会）機能の仕様確定（要件仕様書Ver2・CLAUDE.md・.env.example） | アカウント削除（退会）機能（F10 / U08）の仕様を確定し、要件仕様書 Ver2・CLAUDE.md・`.env.example` に反映する。**仕様確定のみ**で、コード実装・DB変更・mig…                            | Closes #93 | 仕様書・CLAUDE.md・`.env.example` の更新のみのため、アプリ・DBのテストは未実施（追加したTCの結果はすべて「未実施」）。、確認済み：x…                      | Merged | 2026-10-03 | コード・DB・migration・環境変数の設定は変更していない。`SUPABASE_SECRET_KEY` の実値は設…                  |
+| 96  | feat: アカウント削除（退会）機能を追加（F10 / U08）                                   | ログイン中の利用者が自分のアカウントを削除（退会）できる「アカウント削除機能」（F10 / U08）を追加する。仕様は PR #94（Issue #93）で確定した要件仕様書 Ver2 に基づく。、*…             | Closes #95 | **ローカルSupabase（`supabase start`）で実施。本番Supabaseのユーザーは削除していない。**、**Vitest**：24ファイル…                                         | Merged | 2026-10-03 | **本番環境には一切変更していない**（本番Supabaseでの削除、Vercelへの `SUPABASE_SECRET`…                   |
