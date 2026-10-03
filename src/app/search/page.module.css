@@ -12,17 +12,17 @@
   position: relative;
 }
 
-/* 1049px以下（320px・375pxのスマートフォン幅を含む）は、中央ロゴと
+/* 1241px以下（320px・375pxのスマートフォン幅を含む）は、中央ロゴと
    右側の認証表示（既定right:16px）の間隔が狭くなる可能性があるため、
    AuthStatusを通常フローへ戻し、flex-basis:100%で必ずロゴの次の行を
    単独で占有させる（中央揃えのまま2段構成になる）。
    positionはstaticではなくrelativeにし、top/rightはautoにして
    通常フロー上の位置から動かさない。relativeにするのは、
    AuthStatus内のエラー表示の絶対配置基準を.wrapper自身に保つため。
-   1050px以上は実測上の余裕（ロゴとの間隔が約16px以上）を確認できたため既定の右端表示に戻す。
-   ログイン時の認証表示に「お気に入り」リンクが加わって横幅が広がったため、
+   1242px以上は実測上の余裕（ロゴとの間隔が約14px以上）を確認できたため既定の右端表示に戻す。
+   ログイン時の認証表示に「お気に入り」「アカウント削除」リンクが加わって横幅が広がったため、
    以前の899pxから引き上げた。 */
-@media (max-width: 1049px) {
+@media (max-width: 1241px) {
   .headerBand {
     --auth-status-position: relative;
     --auth-status-top: auto;

@@ -104,6 +104,28 @@ test.describe("未ログイン状態の共通表示", () => {
       page.getByText("まだお気に入りの店舗がありません"),
     ).toHaveCount(0);
   });
+
+  test("TC-U08-01: 未ログインで /account/delete を開くと /login?next=/account/delete へ移動する", async ({
+    page,
+  }) => {
+    await page.goto("/account/delete");
+    await page.waitForURL("**/login**");
+
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/login");
+    expect(url.searchParams.get("next")).toBe("/account/delete");
+
+    // ログイン画面が表示されている（アカウント削除の画面・ボタンは表示されない）
+    await expect(page.locator("#email")).toBeVisible();
+    await expect(
+      page.getByText(
+        "メモとお気に入りを含むアカウント情報が削除され、元に戻せません。",
+      ),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "アカウントを削除する" }),
+    ).toHaveCount(0);
+  });
 });
 
 /**
@@ -130,7 +152,7 @@ function boxesOverlap(a: Box, b: Box): boolean {
 test.describe("TC-COM-10（未ログイン側） 共通ヘッダーの表示", () => {
   // 375px / 768px / 900px前後 / 1200px以上
   for (const width of [375, 768, 900, 1200]) {
-    test(`${width}px: U01・U02・U03で『メモ一覧』『お気に入り』が表示されず、認証表示がロゴと重ならず、横スクロールもない`, async ({
+    test(`${width}px: U01・U02・U03で『メモ一覧』『お気に入り』『アカウント削除』が表示されず、認証表示がロゴと重ならず、横スクロールもない`, async ({
       page,
     }) => {
       const stores = await fetchPublishedStores();
@@ -158,6 +180,9 @@ test.describe("TC-COM-10（未ログイン側） 共通ヘッダーの表示", (
         ).toHaveCount(0);
         await expect(
           page.getByRole("link", { name: "お気に入り", exact: true }),
+        ).toHaveCount(0);
+        await expect(
+          page.getByRole("link", { name: "アカウント削除", exact: true }),
         ).toHaveCount(0);
 
         // 認証表示（ログイン・新規登録）がロゴと重ならない

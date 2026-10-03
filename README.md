@@ -141,6 +141,9 @@ Vercel Functionsを東京リージョンへ変更することで、
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY`（サーバー専用。アカウント削除にのみ使用。下記参照）
+
+`SUPABASE_SECRET_KEY` は管理者権限を持つ秘密キーです。**アカウント削除機能（`/account/delete`）のサーバー側処理でだけ使用**し、ブラウザには公開しません（`NEXT_PUBLIC_` を付けません）。本番では、実値をVercelのEnvironment Variablesへ登録します（`.env.local` や `.env.example` に本番の値を書かないでください）。アカウント削除を使わない場合は、他の機能の動作には影響しません。
 
 値はREADMEには記載せず、`.env.example` を参考に `.env.local` を作成してください。
 
@@ -169,9 +172,11 @@ npm install
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
 ※ 実際の値は公開しないでください。
+※ `SUPABASE_SECRET_KEY` はサーバー専用で、アカウント削除にのみ使用します。ブラウザに公開される変数ではありません。
 
 ### 4. 開発サーバーを起動
 
