@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatDateTimeJst,
   formatHoursForList,
   formatPriceForDetail,
   formatPriceForList,
@@ -85,5 +86,19 @@ describe("formatVerifiedDate", () => {
 
   it("does not zero-pad the month or day", () => {
     expect(formatVerifiedDate("2026-09-05")).toBe("2026年9月5日");
+  });
+});
+
+describe("formatDateTimeJst", () => {
+  it("converts a UTC timestamp to JST", () => {
+    expect(formatDateTimeJst("2026-10-03T14:30:00Z")).toBe(
+      "2026年10月3日 23:30",
+    );
+  });
+
+  it("rolls the date over when the UTC to JST conversion crosses midnight", () => {
+    expect(formatDateTimeJst("2026-10-03T16:00:00Z")).toBe(
+      "2026年10月4日 01:00",
+    );
   });
 });

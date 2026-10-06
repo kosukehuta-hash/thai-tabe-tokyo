@@ -45,3 +45,22 @@ export function formatVerifiedDate(value: string): string {
   const [year, month, day] = value.split("-").map(Number);
   return `${year}年${month}月${day}日`;
 }
+
+const jstDateTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+// 日時文字列(ISO 8601)を、実行環境のタイムゾーンに関係なく日本時間(JST)で
+// 「YYYY年M月D日 HH:mm」形式に整形する。
+export function formatDateTimeJst(value: string): string {
+  const parts = jstDateTimeFormatter.formatToParts(new Date(value));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}年${get("month")}月${get("day")}日 ${get("hour")}:${get("minute")}`;
+}

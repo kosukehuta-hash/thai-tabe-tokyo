@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { ListPageLayout } from "@/components/ListPageLayout";
 import listStyles from "@/components/ListPage.module.css";
+import { formatDateTimeJst } from "@/lib/format";
 import { fetchOwnNotesWithStores } from "@/lib/queries/notes";
 import {
   RETURN_TO_PARAM,
@@ -15,16 +16,6 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "メモ一覧 | THAI TABE TOKYO",
 };
-
-function formatUpdatedAt(value: string): string {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}年${month}月${day}日 ${hours}:${minutes}`;
-}
 
 export default async function NotesPage(props: PageProps<"/notes">) {
   // 「閉じる」の戻り先。一覧を開いた元の画面（U01〜U03）のURLで、検証に通らない場合はU01
@@ -84,7 +75,7 @@ export default async function NotesPage(props: PageProps<"/notes">) {
                   )}
                 </span>
                 <span className={styles.updatedAt}>
-                  {formatUpdatedAt(note.updatedAt)}
+                  {formatDateTimeJst(note.updatedAt)}
                 </span>
               </div>
               <p className={styles.noteText}>{note.noteText}</p>
