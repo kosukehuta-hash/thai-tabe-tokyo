@@ -1,4 +1,5 @@
-import { isValidElement, type ReactNode } from "react";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -25,6 +26,7 @@ vi.mock("./actions", () => ({ removeFavorite: vi.fn() }));
 import FavoritesPage from "./page";
 import { FavoriteItem } from "./FavoriteItem";
 import { ListPageLayout } from "@/components/ListPageLayout";
+import { ListFetchError } from "@/components/ListFetchError";
 
 type Element = {
   type: unknown;
@@ -160,18 +162,16 @@ describe("U07 お気に入り画面（/favorites）", () => {
     expect(layout.props.returnTo).toBe(expected);
   });
 
-  it("取得失敗 → 既存（U06）と同じ取得失敗の文言を role=alert で表示し、一覧は出さない", async () => {
+  it("取得失敗 → 既存（U06）と同じ取得失敗の表示（ListFetchError）を出し、文言を role=alert で表示し、一覧は出さない", async () => {
     mocks.fetchOwnFavorites.mockResolvedValue({ status: "error" });
     const tree = await FavoritesPage(props());
-    expect(
-      hasElementWith(
-        tree,
-        (e) =>
-          e.props.role === "alert" &&
-          textOf(e.props.children) ===
-            "情報を取得できませんでした。もう一度お試しください",
-      ),
-    ).toBe(true);
+    const errors = findElements(tree, ListFetchError);
+    expect(errors).toHaveLength(1);
+    // 文言と role=alert は、共通部品が描画する（実際に描画して確認する）
+    const html = renderToStaticMarkup(errors[0] as unknown as ReactElement);
+    expect(html).toMatch(
+      /<p[^>]*role="alert"[^>]*>情報を取得できませんでした。もう一度お試しください<\/p>/,
+    );
     expect(findElements(tree, FavoriteItem)).toHaveLength(0);
     expect(hasElementWith(tree, (e) => e.type === "ul")).toBe(false);
   });
@@ -240,5 +240,95 @@ describe("U07 お気に入り画面（/favorites）", () => {
       "storeId",
       "storeName",
     ]);
+  });
+});
+
+function links(html: string): [string, string][] {
+  return [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g)].map(
+    (m) => [m[1].replace(/&amp;/g, "&"), m[2]],
+  );
+}
+
+// 取得失敗の表示（ListFetchError）を実際に描画したHTML
+function markupOf(tree: ReactNode): string {
+  const [error] = findElements(tree, ListFetchError);
+  return renderToStaticMarkup(error as unknown as ReactElement);
+}
+
+describe("U07 お気に入り画面（/favorites）の取得失敗と再試行", () => {
+  beforeEach(() => {
+    mocks.fetchOwnFavorites.mockResolvedValue({ status: "error" });
+  });
+
+  it("取得失敗 → 取得失敗の文言と『再試行』リンクを表示し、一覧・0件の表示は出さない", async () => {
+    const tree = await FavoritesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(1);
+    expect(findElements(tree, FavoriteItem)).toHaveLength(0);
+    const html = markupOf(tree);
+    expect(html).toContain('role="alert"');
+    expect(html).toContain(
+      "情報を取得できませんでした。もう一度お試しください",
+    );
+    expect(links(html)).toEqual([["/favorites", "再試行"]]);
+    expect(findElements(tree, "ul")).toHaveLength(0);
+    expect(JSON.stringify(tree)).not.toContain(
+      "まだお気に入りの店舗がありません",
+    );
+  });
+
+  it.each([
+    ["returnTo がない", {}, "/favorites"],
+    [
+      "U02（検索条件付き）",
+      { returnTo: "/search?area_id=1&time=lunch" },
+      "/favorites?returnTo=%2Fsearch%3Farea_id%3D1%26time%3Dlunch",
+    ],
+    [
+      "U03（クエリ付き）",
+      { returnTo: "/store/123?area_id=1&time=lunch" },
+      "/favorites?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
+    ],
+    ["外部URL（不正）", { returnTo: "https://example.com" }, "/favorites"],
+    ["プロトコル相対URL（不正）", { returnTo: "//example.com" }, "/favorites"],
+    ["一覧自身（不正）", { returnTo: "/notes" }, "/favorites"],
+  ])("再試行先（%s）", async (_label, query, expected) => {
+    const tree = await FavoritesPage(props(query));
+    const [error] = findElements(tree, ListFetchError);
+    expect(error.props.retryHref).toBe(expected);
+    expect(links(markupOf(tree))[0]).toEqual([expected, "再試行"]);
+  });
+
+  it("取得失敗でも『閉じる』は従来どおり（文言・戻り先を変えない）", async () => {
+    const tree = await FavoritesPage(props({ returnTo: "/search?area_id=1" }));
+    const [layout] = findElements(tree, ListPageLayout);
+    expect(layout.props.closeLabel).toBe("お気に入りを閉じる");
+    expect(layout.props.returnTo).toBe("/search?area_id=1");
+  });
+
+  it("お気に入りあり（正常な一覧） → 一覧を表示し、『再試行』は出さない", async () => {
+    mocks.fetchOwnFavorites.mockResolvedValue({
+      status: "success",
+      favorites: [
+        {
+          store_id: 9,
+          store_name: "テスト食堂",
+          is_published: true,
+          created_at: "2026-09-30T10:00:00Z",
+        },
+      ],
+    });
+    const tree = await FavoritesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(0);
+    expect(findElements(tree, FavoriteItem)).toHaveLength(1);
+  });
+
+  it("お気に入り0件 → 『まだお気に入りの店舗がありません』を表示し、『再試行』は出さない", async () => {
+    mocks.fetchOwnFavorites.mockResolvedValue({
+      status: "success",
+      favorites: [],
+    });
+    const tree = await FavoritesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(0);
+    expect(JSON.stringify(tree)).toContain("まだお気に入りの店舗がありません");
   });
 });

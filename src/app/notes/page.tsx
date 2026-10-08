@@ -3,11 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { ListPageLayout } from "@/components/ListPageLayout";
+import { ListFetchError } from "@/components/ListFetchError";
 import listStyles from "@/components/ListPage.module.css";
 import { formatDateTimeJst } from "@/lib/format";
 import { fetchOwnNotesWithStores } from "@/lib/queries/notes";
 import {
   RETURN_TO_PARAM,
+  buildListHref,
   buildLoginHrefForList,
   sanitizeReturnTo,
 } from "@/lib/return-to";
@@ -41,7 +43,8 @@ export default async function NotesPage(props: PageProps<"/notes">) {
       returnTo={returnTo}
     >
       {result.status === "error" && (
-        <p role="alert">情報を取得できませんでした。もう一度お試しください</p>
+        // 再試行は、この一覧を開き直す。検証済みの戻り先（returnTo）は保ち、不正な値は引き継がない
+        <ListFetchError retryHref={buildListHref("/notes", returnTo)} />
       )}
 
       {result.status === "success" && result.notes.length === 0 && (
