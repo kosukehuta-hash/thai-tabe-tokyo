@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAuthenticatedUserId } from "@/lib/supabase/auth";
+import { isProtectedUserId } from "@/lib/protected-users";
 import {
   RETURN_TO_PARAM,
   buildLoginHrefForList,
@@ -48,7 +49,8 @@ export default async function AccountDeletePage(
       returnTo={returnTo}
     >
       <p className={styles.notice}>{DELETE_NOTICE}</p>
-      <DeleteAccountForm />
+      {/* 保護対象かどうかの判定結果（真偽値）だけを渡す。保護対象のIDの実値は渡さない */}
+      <DeleteAccountForm isProtected={isProtectedUserId(userId)} />
     </ListPageLayout>
   );
 }

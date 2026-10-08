@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthenticatedUserId } from "@/lib/supabase/auth";
 import { deleteUserAsAdmin } from "@/lib/supabase/admin";
+import { isProtectedUserId } from "@/lib/protected-users";
 import {
   AUTH_ERROR_MESSAGE,
   DELETE_ACCOUNT_ERROR_MESSAGE,
+  PROTECTED_ACCOUNT_ERROR_MESSAGE,
 } from "@/lib/action-messages";
 import { logSupabaseError } from "@/lib/logger";
 
@@ -46,6 +48,13 @@ export async function deleteAccount(
   if (userId === null) {
     // 未ログイン（またはセッション切れ）では削除処理を実行しない
     return { error: AUTH_ERROR_MESSAGE };
+  }
+
+  // 保護対象（共有デモアカウント）は、削除API・サインアウト・画面遷移のいずれも実行せず終了する。
+  // 画面側の無効化とは別に、ここで必ず判定する（画面を経由しない直接の実行への備え）。
+  // 保護対象のIDは、ログにも戻り値にも含めない
+  if (isProtectedUserId(userId)) {
+    return { error: PROTECTED_ACCOUNT_ERROR_MESSAGE };
   }
 
   const { error } = await deleteUserAsAdmin(userId);
