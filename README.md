@@ -95,6 +95,7 @@ THAI TABE TOKYOは、東京でタイ料理を楽しみたい人が、
 - 削除時に、そのユーザーのメモとお気に入りも削除
 - 削除後はトップ画面へ戻り、「退会しました」を表示
 - サーバー専用の秘密キーをブラウザへ公開しない構成
+- 共有デモアカウントは、削除できないよう保護（「デモアカウントは削除できません」と表示し、削除ボタンは無効）
 
 ## 使用技術（Technology）
 
@@ -161,8 +162,11 @@ Vercel Functionsを東京リージョンへ変更することで、
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`（サーバー専用。アカウント削除にのみ使用。下記参照）
+- `PROTECTED_USER_IDS`（サーバー専用。共有デモアカウントの削除保護に使用。下記参照）
 
 `SUPABASE_SECRET_KEY` は管理者権限を持つ秘密キーです。**アカウント削除機能（`/account/delete`）のサーバー側処理でだけ使用**し、ブラウザには公開しません（`NEXT_PUBLIC_` を付けません）。本番では、実値をVercelのEnvironment Variablesへ登録します（`.env.local` や `.env.example` に本番の値を書かないでください）。アカウント削除を使わない場合は、他の機能の動作には影響しません。
+
+`PROTECTED_USER_IDS` は、共有デモアカウントを「アカウント削除」（U08）から削除されないよう保護するための、サーバー専用の環境変数です（`NEXT_PUBLIC_` を付けず、ブラウザには公開しません）。保護するユーザーのIDを、カンマ区切りで複数指定できます（各値の前後の空白は無視し、大文字小文字は変換せず、ユーザーIDと完全一致で比較します。部分一致はしません）。未設定または空の場合は、保護対象なしとして扱います。実際のUUIDはREADMEには記載しません。`.env.example` には名前だけを記載し、値は空にしています。本番では、Vercel の Production の Environment Variables へ設定します。
 
 値はREADMEには記載せず、`.env.example` を参考に `.env.local` を作成してください。
 
@@ -192,10 +196,12 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
+PROTECTED_USER_IDS=
 ```
 
 ※ 実際の値は公開しないでください。
 ※ `SUPABASE_SECRET_KEY` はサーバー専用で、アカウント削除にのみ使用します。ブラウザに公開される変数ではありません。
+※ `PROTECTED_USER_IDS` はサーバー専用で、共有デモアカウントの削除保護にだけ使用します。ローカルで設定しない場合は、保護対象なしとして動作します。
 
 ### 4. 開発サーバーを起動
 
@@ -320,6 +326,8 @@ supabase stop
 
 ※レビュー用の共通アカウントです。パスワードの変更や、アカウント削除（U08）は行わないでください。
 
+共有デモアカウントは、U08（アカウント削除）から削除できないよう保護しています。保護対象のアカウントでは、U08に「デモアカウントは削除できません」と表示され、「アカウントを削除する」ボタンは無効になります（確認チェックボックスは操作できます）。サーバー側でも保護対象かどうかを判定し、削除処理は実行されません。
+
 | 項目 | 値 |
 | --- | --- |
 | メールアドレス | thai-tabe-demo@example.com |
@@ -361,6 +369,7 @@ thai-tabe-tokyo/
 │   │   ├── supabase/         # Supabaseクライアント（ブラウザ用・サーバー用・proxy用・アカウント削除用）
 │   │   ├── supabase.ts       # 公開データ取得用のSupabaseクライアント
 │   │   ├── format.ts         # 価格・営業時間・日時（日本時間）の表示整形
+│   │   ├── protected-users.ts # 共有デモアカウントの削除保護（保護対象ユーザーの判定）
 │   │   └── return-to.ts      # 一覧画面を閉じたときの戻り先の制御
 │   ├── proxy.ts              # 認証セッションの更新（Next.js 16のproxy）
 │   └── types/                # Supabaseの型定義（自動生成）
