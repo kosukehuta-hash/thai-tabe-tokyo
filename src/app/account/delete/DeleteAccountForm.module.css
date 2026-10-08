@@ -49,6 +49,14 @@
   color: #b3261e;
 }
 
+.protectedNotice {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #b3261e;
+}
+
 .deleteButton:disabled {
   opacity: 0.45;
   cursor: not-allowed;

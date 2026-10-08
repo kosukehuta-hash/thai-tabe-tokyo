@@ -43,8 +43,15 @@
   - 使用するAdmin APIは `auth.admin.deleteUser()` のみ（ユーザー一覧の取得など他の管理操作は使わない）
   - 削除対象のユーザーIDは、ログイン中ユーザーの検証済みJWTから取得したIDだけを使う。フォーム値・URLパラメータなどからユーザーIDを受け取らない
   - 実値のVercel Environment Variablesへの登録は、実装とローカル確認が完了してから、本番デプロイ前に行う
+- `PROTECTED_USER_IDS` は、共有デモアカウントをU08から削除されないよう保護するための、サーバー専用の環境変数とする（アカウント削除機能 F10 / U08 の保護判定にだけ使う）。次の条件をすべて守る
+  - サーバー専用とし、`NEXT_PUBLIC_` を付けない。Client Component・ブラウザへ実値を渡さない（画面へ渡すのは「保護対象かどうか」の判定結果だけ）
+  - 複数のUUIDをカンマ区切りで設定できる。各値を `trim()` し、大文字小文字の正規化は行わず、認証済みuser IDと完全一致で比較する。部分一致は禁止
+  - 判定は、ログイン中ユーザーの検証済みJWTから取得したuser IDで行う。フォーム値・URLパラメータなどから受け取ったIDは使わない
+  - 未設定または空の場合は、保護対象なしとして扱う
+  - 実際のUUIDは、コード・README・仕様書・ログへ直書き・出力しない
+  - 本番ではVercel Production環境に設定する。Preview環境へ設定するかは、別途運用判断とする。登録は、実装とローカル確認が完了してから、本番デプロイ前に行う
 - 環境変数の実値は、ローカルでは.env.local、本番ではVercel Environment Variablesだけに保存し、コード、GitHub、仕様書、README、CLAUDE.md、チャット、通常ログには記載・出力しない
-- .env.localはGit管理対象外とし、.env.exampleには使用する環境変数名（NEXT_PUBLIC_SUPABASE_URL、NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY、SUPABASE_SECRET_KEY）だけを記載して実値は入れない
+- .env.localはGit管理対象外とし、.env.exampleには使用する環境変数名（NEXT_PUBLIC_SUPABASE_URL、NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY、SUPABASE_SECRET_KEY、PROTECTED_USER_IDS）だけを記載して実値は入れない
 
 ## 進め方
 - 仕様にない判断が必要な場合は、推測せず作業を止めて確認する

@@ -76,6 +76,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.clearAllMocks();
 });
 
@@ -153,5 +154,50 @@ describe("U08 アカウント削除画面（/account/delete）", () => {
       const [layout] = findElements(tree, ListPageLayout);
       expect(layout.props.returnTo).toBe(expected);
     });
+  });
+});
+
+describe("U08 アカウント削除画面（デモアカウント保護）", () => {
+  // 実在しないダミーのUUID形式の値（実際のデモユーザーのIDではない）
+  const PROTECTED_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const OTHER_PROTECTED_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const NORMAL_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+
+  it("保護対象のユーザー → 削除ボタンを無効にして注意文を出すよう、フォームへ isProtected=true を渡す（移動しない）", async () => {
+    vi.stubEnv("PROTECTED_USER_IDS", `${OTHER_PROTECTED_ID}, ${PROTECTED_ID}`);
+    mocks.getAuthenticatedUserId.mockResolvedValue(PROTECTED_ID);
+    const tree = await AccountDeletePage(props());
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    const forms = findElements(tree, DeleteAccountForm);
+    expect(forms).toHaveLength(1);
+    expect(forms[0].props.isProtected).toBe(true);
+  });
+
+  it("通常のユーザー → 保護の表示をしない（isProtected=false）。環境変数が未設定でも同じ", async () => {
+    mocks.getAuthenticatedUserId.mockResolvedValue(NORMAL_ID);
+
+    vi.stubEnv("PROTECTED_USER_IDS", `${PROTECTED_ID},${OTHER_PROTECTED_ID}`);
+    let tree = await AccountDeletePage(props());
+    expect(findElements(tree, DeleteAccountForm)[0].props.isProtected).toBe(
+      false,
+    );
+
+    vi.stubEnv("PROTECTED_USER_IDS", undefined);
+    tree = await AccountDeletePage(props());
+    expect(findElements(tree, DeleteAccountForm)[0].props.isProtected).toBe(
+      false,
+    );
+  });
+
+  it("Client Componentへ渡す値は判定結果（真偽値）だけで、保護対象UUIDの実値を含まない", async () => {
+    vi.stubEnv("PROTECTED_USER_IDS", `${PROTECTED_ID},${OTHER_PROTECTED_ID}`);
+    mocks.getAuthenticatedUserId.mockResolvedValue(PROTECTED_ID);
+    const tree = await AccountDeletePage(props());
+    const [form] = findElements(tree, DeleteAccountForm);
+    expect(Object.keys(form.props)).toEqual(["isProtected"]);
+    expect(typeof form.props.isProtected).toBe("boolean");
+    const serialized = JSON.stringify(form.props);
+    expect(serialized).not.toContain(PROTECTED_ID);
+    expect(serialized).not.toContain(OTHER_PROTECTED_ID);
   });
 });

@@ -17,6 +17,7 @@ function render(
     confirmed?: boolean;
     pending?: boolean;
     error?: string | null;
+    isProtected?: boolean;
   } = {},
 ): string {
   return renderToStaticMarkup(
@@ -26,6 +27,7 @@ function render(
       formAction={() => {}}
       pending={options.pending ?? false}
       error={options.error ?? null}
+      isProtected={options.isProtected}
     />,
   );
 }
@@ -102,5 +104,38 @@ describe("U08 確認フォーム（DeleteAccountForm）の初期状態", () => {
     expect(checkboxTag(html)).not.toContain("checked");
     expect(buttonTag(html)).toContain("disabled");
     expect(html).not.toContain('role="alert"');
+  });
+});
+
+describe("U08 確認フォーム（デモアカウント保護）", () => {
+  const PROTECTED_MESSAGE = "デモアカウントは削除できません";
+
+  it("保護対象 → 確認チェックの有無にかかわらず、削除ボタンが無効である（チェックボックス自体は操作できる）", () => {
+    const unchecked = render({ confirmed: false, isProtected: true });
+    expect(buttonTag(unchecked)).toMatch(/\sdisabled/);
+    expect(checkboxTag(unchecked)).not.toMatch(/\sdisabled/);
+
+    const checked = render({ confirmed: true, isProtected: true });
+    expect(checkboxTag(checked)).toContain("checked");
+    expect(checkboxTag(checked)).not.toMatch(/\sdisabled/);
+    expect(buttonTag(checked)).toMatch(/\sdisabled/);
+  });
+
+  it("保護対象 → 『デモアカウントは削除できません』を表示する", () => {
+    const html = render({ confirmed: false, isProtected: true });
+    expect(html).toContain(PROTECTED_MESSAGE);
+  });
+
+  it("保護対象ではない → 従来どおり、チェックすると削除ボタンが有効になる（保護の表示も出さない）", () => {
+    const unchecked = render({ confirmed: false, isProtected: false });
+    expect(unchecked).not.toContain(PROTECTED_MESSAGE);
+    expect(buttonTag(unchecked)).toContain("disabled");
+
+    const checked = render({ confirmed: true, isProtected: false });
+    expect(checked).not.toContain(PROTECTED_MESSAGE);
+    expect(buttonTag(checked)).not.toContain("disabled");
+
+    // isProtected を渡さない場合も同じ（既定は保護対象ではない）
+    expect(buttonTag(render({ confirmed: true }))).not.toContain("disabled");
   });
 });
