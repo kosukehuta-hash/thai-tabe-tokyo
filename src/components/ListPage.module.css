@@ -186,3 +186,22 @@
 .emptyText {
   font-size: 16px;
 }
+
+/* 取得失敗の表示（ListFetchError）。リンクの見た目は店舗詳細の再試行リンク（actionLink）と同じ。
+   タップしやすいよう、見た目を変えずに押せる範囲だけを44px以上にしている */
+.fetchErrorMessage {
+  margin: 8px 0 0;
+  color: #2b2118;
+}
+
+.fetchErrorActions {
+  margin-top: 8px;
+}
+
+.retryLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #b65c1f;
+  text-decoration: underline;
+}

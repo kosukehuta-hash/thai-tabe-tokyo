@@ -5,10 +5,12 @@ import { getAuthenticatedUserId } from "@/lib/supabase/auth";
 import { fetchOwnFavorites } from "@/lib/queries/favorites";
 import {
   RETURN_TO_PARAM,
+  buildListHref,
   buildLoginHrefForList,
   sanitizeReturnTo,
 } from "@/lib/return-to";
 import { ListPageLayout } from "@/components/ListPageLayout";
+import { ListFetchError } from "@/components/ListFetchError";
 import listStyles from "@/components/ListPage.module.css";
 import { FavoriteItem } from "./FavoriteItem";
 
@@ -44,7 +46,8 @@ export default async function FavoritesPage(props: PageProps<"/favorites">) {
       returnTo={returnTo}
     >
       {result.status === "error" && (
-        <p role="alert">情報を取得できませんでした。もう一度お試しください</p>
+        // 再試行は、この一覧を開き直す。検証済みの戻り先（returnTo）は保ち、不正な値は引き継がない
+        <ListFetchError retryHref={buildListHref("/favorites", returnTo)} />
       )}
 
       {result.status === "success" && result.favorites.length === 0 && (

@@ -1,4 +1,5 @@
-import { isValidElement, type ReactNode } from "react";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -20,6 +21,7 @@ vi.mock("@/lib/queries/notes", () => ({
 
 import NotesPage from "./page";
 import { ListPageLayout } from "@/components/ListPageLayout";
+import { ListFetchError } from "@/components/ListFetchError";
 
 type Element = {
   type: unknown;
@@ -121,5 +123,95 @@ describe("U06 メモ一覧（/notes）の『閉じる』", () => {
       NotesPage(props({ returnTo: "/search?area_id=1&time=lunch" })),
     ).rejects.toThrow(`NEXT_REDIRECT:${expected}`);
     expect(mocks.fetchOwnNotesWithStores).not.toHaveBeenCalled();
+  });
+});
+
+const NOTE = {
+  noteId: 1,
+  storeId: 10,
+  noteText: "辛さは控えめにしてもらった",
+  updatedAt: "2026-09-30T10:00:00Z",
+  storeName: "テスト食堂",
+  isPublished: true,
+};
+
+function links(html: string): [string, string][] {
+  return [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g)].map(
+    (m) => [m[1].replace(/&amp;/g, "&"), m[2]],
+  );
+}
+
+// 取得失敗の表示（ListFetchError）を実際に描画したHTML
+function markupOf(tree: ReactNode): string {
+  const [error] = findElements(tree, ListFetchError);
+  return renderToStaticMarkup(error as unknown as ReactElement);
+}
+
+describe("U06 メモ一覧（/notes）の取得失敗と再試行", () => {
+  beforeEach(() => {
+    mocks.fetchOwnNotesWithStores.mockResolvedValue({ status: "error" });
+  });
+
+  it("取得失敗 → 取得失敗の文言と『再試行』リンクを表示し、一覧・0件の表示は出さない", async () => {
+    const tree = await NotesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(1);
+    const html = markupOf(tree);
+    expect(html).toContain('role="alert"');
+    expect(html).toContain(
+      "情報を取得できませんでした。もう一度お試しください",
+    );
+    expect(links(html)).toEqual([["/notes", "再試行"]]);
+    expect(findElements(tree, "ul")).toHaveLength(0);
+    expect(JSON.stringify(tree)).not.toContain("まだメモがありません");
+  });
+
+  it.each([
+    ["returnTo がない", {}, "/notes"],
+    [
+      "U02（検索条件付き）",
+      { returnTo: "/search?area_id=1&time=lunch" },
+      "/notes?returnTo=%2Fsearch%3Farea_id%3D1%26time%3Dlunch",
+    ],
+    [
+      "U03（クエリ付き）",
+      { returnTo: "/store/123?area_id=1&time=lunch" },
+      "/notes?returnTo=%2Fstore%2F123%3Farea_id%3D1%26time%3Dlunch",
+    ],
+    ["外部URL（不正）", { returnTo: "https://example.com" }, "/notes"],
+    ["プロトコル相対URL（不正）", { returnTo: "//example.com" }, "/notes"],
+    ["一覧自身（不正）", { returnTo: "/favorites" }, "/notes"],
+  ])("再試行先（%s）", async (_label, query, expected) => {
+    const tree = await NotesPage(props(query));
+    const [error] = findElements(tree, ListFetchError);
+    expect(error.props.retryHref).toBe(expected);
+    expect(links(markupOf(tree))[0]).toEqual([expected, "再試行"]);
+  });
+
+  it("取得失敗でも『閉じる』は従来どおり（文言・戻り先を変えない）", async () => {
+    const tree = await NotesPage(props({ returnTo: "/search?area_id=1" }));
+    const [layout] = findElements(tree, ListPageLayout);
+    expect(layout.props.closeLabel).toBe("メモ一覧を閉じる");
+    expect(layout.props.returnTo).toBe("/search?area_id=1");
+  });
+
+  it("メモあり（正常な一覧） → 一覧を表示し、『再試行』は出さない", async () => {
+    mocks.fetchOwnNotesWithStores.mockResolvedValue({
+      status: "success",
+      notes: [NOTE],
+    });
+    const tree = await NotesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(0);
+    expect(findElements(tree, "ul")).toHaveLength(1);
+    expect(findElements(tree, "li")).toHaveLength(1);
+  });
+
+  it("メモ0件 → 『まだメモがありません』を表示し、『再試行』は出さない", async () => {
+    mocks.fetchOwnNotesWithStores.mockResolvedValue({
+      status: "success",
+      notes: [],
+    });
+    const tree = await NotesPage(props());
+    expect(findElements(tree, ListFetchError)).toHaveLength(0);
+    expect(JSON.stringify(tree)).toContain("まだメモがありません");
   });
 });
