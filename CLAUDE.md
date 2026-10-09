@@ -25,6 +25,7 @@
 - Tailwind CSSや追加のUIライブラリを導入しない
 - 認証には `@supabase/ssr` を使用する
 - Next.js 16.3.4ではmiddleware.tsではなくproxy.tsを使用する
+- ローカルSupabaseを使うVitest統合テスト43件（RLS・DB関数・退会）は、CIの `integration-tests` jobで、job内に起動したローカルSupabase上で必ず実行し、skipを許可しない（`REQUIRE_LOCAL_SUPABASE=1`）。クラウドSupabase（GitHub Secrets）の接続情報は、このjobへ渡さない
 
 ## DB
 - DBはareas、dishes、stores、store_dishes、store_photosの既存5テーブルに、store_visit_notes（店舗メモ）、store_favorites（お気に入り）を加えた7テーブルとする

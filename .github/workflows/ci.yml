@@ -40,6 +40,99 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+  # RLS・DB関数・アカウント削除（ON DELETE CASCADE等）の統合テスト43件を、
+  # このjob内で起動したローカルSupabase上で必ず実行する。
+  # クラウドSupabase（GitHub Secrets）の接続情報は一切渡さない。
+  # REQUIRE_LOCAL_SUPABASE=1 により、ローカルSupabaseが使えない場合はskipではなく失敗になる。
+  integration-tests:
+    name: Supabase Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      REQUIRE_LOCAL_SUPABASE: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.120.0
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Reset local database (migrations + seed)
+        run: supabase db reset
+
+      # supabase start で起動したこのjob専用のローカルSupabaseから、接続情報をその場で取得する。
+      # 値はログに出さない（::add-mask::）。固定値のSecrets登録は不要。
+      - name: Export local Supabase connection info for tests
+        run: |
+          set -euo pipefail
+          status_file="$RUNNER_TEMP/supabase-status.env"
+          supabase status -o env > "$status_file"
+
+          # 指定した名前を順に探し、最初に見つかった値（引用符なし）を返す
+          get_value() {
+            local key line
+            for key in "$@"; do
+              line=$(grep -E "^${key}=" "$status_file" | head -n 1 || true)
+              if [ -n "$line" ]; then
+                line="${line#*=}"
+                line="${line#\"}"
+                line="${line%\"}"
+                printf '%s' "$line"
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          fail_missing() {
+            echo "::error::supabase status -o env に $1 が見つかりません。出力されているキー名: $(cut -d= -f1 "$status_file" | tr '\n' ' ')"
+            exit 1
+          }
+
+          api_url=$(get_value API_URL) || fail_missing "API_URL"
+          anon_key=$(get_value ANON_KEY PUBLISHABLE_KEY) || fail_missing "ANON_KEY / PUBLISHABLE_KEY"
+          admin_key=$(get_value SECRET_KEY SERVICE_ROLE_KEY) || fail_missing "SECRET_KEY / SERVICE_ROLE_KEY"
+
+          echo "::add-mask::$anon_key"
+          echo "::add-mask::$admin_key"
+          {
+            echo "TEST_LOCAL_SUPABASE_URL=$api_url"
+            echo "TEST_LOCAL_SUPABASE_ANON_KEY=$anon_key"
+            echo "TEST_LOCAL_ADMIN_KEY=$admin_key"
+          } >> "$GITHUB_ENV"
+          rm -f "$status_file"
+
+      - name: Run integration tests (43 tests)
+        run: npm run test:integration -- --reporter=default --reporter=json --outputFile.json=vitest-integration-results.json
+
+      # 43件すべて成功・skipped 0・failed 0であることを確認する（1件でもskipがあれば失敗）
+      - name: Verify no integration test was skipped
+        if: always()
+        run: node scripts/check-integration-skips.mjs vitest-integration-results.json
+
+      - name: Upload integration test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: vitest-integration-results.json
+          if-no-files-found: ignore
+          retention-days: 7
+
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest

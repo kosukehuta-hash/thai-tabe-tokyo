@@ -277,6 +277,28 @@ npm run db:types
 
 ローカルSupabase（`supabase start`で起動したもの）の現在のスキーマから、`src/types/database.types.ts` が最新の内容に再生成されます。
 
+### 統合テストの実行（ローカルSupabase）
+
+ローカルSupabaseを使う統合テスト43件（`favorites.security.test.ts` 22件・`notes.security.test.ts` 7件・`account-delete.security.test.ts` 14件）は、RLS・DB関数・アカウント削除（`ON DELETE CASCADE`）を実際のDBで確認します。接続先は常にローカルSupabaseだけで、クラウドSupabase・本番Supabaseには接続しません（接続先が `127.0.0.1` / `localhost` 以外の場合は使用しません）。
+
+ローカルで実行する手順（Windows PowerShell）です。
+
+```powershell
+supabase start
+supabase status -o env
+```
+
+`supabase status -o env` で表示される、ローカルSupabaseの管理者用キー（Secret key）を環境変数に設定して実行します。この値はローカル専用で、`.env.local`・コード・GitHubには書きません。
+
+```powershell
+$env:TEST_LOCAL_ADMIN_KEY = "（supabase status で表示されたSecret key）"
+npm run test:integration
+```
+
+- ローカルSupabaseを起動していない場合や `TEST_LOCAL_ADMIN_KEY` がない場合、通常（`npm run test` / `npm run test:integration`）はテストが自動でスキップされます
+- 環境変数 `REQUIRE_LOCAL_SUPABASE=1` を設定すると、スキップせずに失敗します（接続先がローカルでない場合、`TEST_LOCAL_SUPABASE_ANON_KEY`・`TEST_LOCAL_ADMIN_KEY` がない場合も失敗）。CIはこのモードで実行します
+- CI（GitHub Actionsの `integration-tests` job）では、job内で `supabase start` → `supabase db reset` を実行し、その場で起動したローカルSupabaseの接続情報を `supabase status -o env` から取得して使います。実行後に `scripts/check-integration-skips.mjs` が、43件成功・skipped 0・failed 0であることを確認します
+
 ### ローカルSupabaseの停止
 
 ```bash
@@ -434,13 +456,15 @@ thai-tabe-tokyo/
 
 Vitest・Playwright・GitHub Actionsによる自動テストを導入しています。
 
-- `npm run test`：Vitestによる単体テスト
+- `npm run test`：Vitestによる単体テスト（ローカルSupabaseが必要な統合テスト43件は、Supabaseが起動していない環境では自動でスキップされる）
+- `npm run test:integration`：ローカルSupabaseを使う統合テスト43件（RLS・DB関数・アカウント削除。実行方法は「統合テストの実行（ローカルSupabase）」を参照）
 - `npm run test:e2e`：Playwrightによる主要画面（検索・店舗詳細・認証・店舗メモ等）のE2Eテスト
 - `npm run lint`：ESLintによるコード品質チェック
 - `npm run format:check`：Prettierによるフォーマットチェック
 - `npm run typecheck`：TypeScriptの型チェック
 - `npm run build`：本番ビルドが正常に完了することを確認
 - GitHub Actions（CI）で、PR作成時・mainへのpush時に上記のテスト・チェックを自動実行
+- CIの統合テストjob（`integration-tests`）では、job内で `supabase start` → `supabase db reset` したローカルSupabase上で統合テスト43件を必ず実行する。1件でもスキップ・失敗があればCIが失敗する（クラウドSupabaseの接続情報は渡さない）
 - PC・スマートフォン向けのレスポンシブ表示を手動確認
 - 公開後にブラウザのNetworkとVercel Logsを使って表示速度を確認
 
