@@ -140,6 +140,102 @@ Vercel FunctionsとSupabaseの実行リージョンが離れていることが�
 Vercel Functionsを東京リージョンへ変更することで、
 検索結果画面の処理時間を約1.94秒から約0.38秒まで短縮しました。
 
+## 主要処理のシーケンス
+
+認証まわりで特に作り込んだ、次の2つの処理の流れです（実装の処理順に沿っています）。
+
+### ログインと戻り先の検証
+
+ログイン後の遷移先（`next`）や、メモ一覧・お気に入り・アカウント削除の「閉じる」の戻り先（`returnTo`）はURLで受け渡すため、書き換えられる可能性があります。検証せずに移動すると、外部サイトへ誘導される「オープンリダイレクト」になるため、サーバー側で検証し、不正な値は安全な既定の画面（トップ `/`）に置き換えます。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as ユーザー
+    participant P as 保護画面<br/>(/notes・/favorites・/account/delete)
+    participant L as ログイン画面<br/>(/login とログイン処理)
+    participant V as 戻り先の検証<br/>(sanitizeReturnTo・sanitizeNextPath)
+    participant A as Supabase Auth
+
+    U->>P: 未ログインで開く
+    P->>A: getClaims() でログイン状態を確認
+    A-->>P: 未ログイン
+    P->>V: 戻り先 returnTo を検証
+    V-->>P: 検証済みの returnTo（不正なら "/"）
+    P-->>U: /login?next=（自分のURL。returnTo付き）へ redirect
+    U->>L: ログイン画面を開く
+    L->>V: next を検証
+    alt 安全なアプリ内のパス
+        V-->>L: そのまま採用
+    else 外部URL・// や /\ で始まる値・/login・/signup など
+        V-->>L: "/"（トップ）に置き換え
+    end
+    L-->>U: ログインフォーム（検証済みの next を hidden で保持）
+    U->>L: メールアドレス・パスワードを送信
+    L->>V: next を再検証（フォームの値も信用しない）
+    L->>A: signInWithPassword()
+    alt 認証失敗
+        A-->>L: エラー
+        L-->>U: 「メールアドレスまたはパスワードが正しくありません。」
+    else 認証成功
+        A-->>L: セッション
+        L-->>U: 検証済みの next へ redirect
+        U->>P: 元の画面が開く
+        P->>V: returnTo を再検証（「閉じる」の戻り先に使う）
+    end
+```
+
+- `next`（`sanitizeNextPath`）は、アプリ内のパスだけを許可します。外部URL・`//` や `/\` で始まる値・制御文字・`/login` と `/signup`（ログインの繰り返しを防ぐため）は、`/` に置き換えます。
+- `returnTo`（`sanitizeReturnTo`）は、上の検証に加えて、U01（`/`）・U02（`/search`）・U03（`/store/数字`）のパスだけを許可します。
+- 検証は、ログイン画面とログイン処理（Server Action）の両方で行い、フォームから送られた値も信用しません。
+
+### アカウント削除
+
+アカウント削除は元に戻せないため、画面の制御だけに頼らず、Server Action（サーバー側）でも同じ判定を行います。共有デモアカウントは、環境変数 `PROTECTED_USER_IDS`（サーバー専用）で保護しています。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as ユーザー
+    participant F as U08画面<br/>(/account/delete)
+    participant S as Server Action<br/>(deleteAccount)
+    participant A as Supabase Auth<br/>(JWT検証・Admin API・セッション)
+    participant D as Database
+
+    Note over F: 保護対象のデモアカウントは削除ボタンを無効にする<br/>(画面へ渡すのは判定結果の真偽値だけ)
+    U->>F: 確認チェックを入れて「アカウントを削除する」を押す
+    F->>S: 削除を要求（ユーザーIDは送らない）
+    S->>A: getClaims() で検証済みJWTから user ID を取得
+    alt 未ログイン・セッション切れ
+        A-->>S: user ID なし
+        S-->>F: エラー表示「ログイン状態を確認できませんでした」
+    else ログイン中
+        S->>S: PROTECTED_USER_IDS（サーバー専用）と<br/>user ID を比較
+        alt 保護対象（共有デモアカウント）
+            S-->>F: 「デモアカウントは削除できません」
+            Note over S,A: deleteUser・signOut・redirect は実行しない<br/>(ログイン状態のまま)
+        else 通常ユーザー
+            S->>A: auth.admin.deleteUser(userId, false)<br/>(秘密キーはサーバー専用モジュールだけで使用)
+            alt 削除に失敗
+                A-->>S: エラー
+                S-->>F: エラー表示「アカウントを削除できませんでした」
+            else 削除に成功
+                A->>D: auth.users を削除<br/>(ON DELETE CASCADE で<br/>メモ・お気に入りも削除)
+                A-->>S: 成功（この時点で退会は成功扱い）
+                S->>A: signOut()（失敗しても成功扱い）
+                S->>S: revalidatePath("/", "layout")
+                S-->>U: redirect("/?withdrawn=1")
+                Note over U,F: U01はログアウト状態のときだけ「退会しました」を表示
+            end
+        end
+    end
+```
+
+- 削除する対象のIDは、検証済みのJWT（`getClaims()`）から取得した本人のIDだけです。フォームやURLのIDは受け取りません。
+- 保護対象かどうかの判定（`PROTECTED_USER_IDS` との完全一致）は、画面を経由しない直接の実行でも働くよう、Server Action でも行います。保護対象のIDの実値は、画面・ログに出しません。
+- 秘密キー（`SUPABASE_SECRET_KEY`）は、サーバー専用のモジュール1か所だけで使い、使う管理APIは `auth.admin.deleteUser()` だけです。ブラウザには渡しません。
+- メモとお気に入りは、データベースの外部キー（`ON DELETE CASCADE`）で、ユーザーの削除と同時に削除されます。
+
 ## 今後の実装・改善予定
 
 - 人気の検索条件が分かる検索ランキング機能
