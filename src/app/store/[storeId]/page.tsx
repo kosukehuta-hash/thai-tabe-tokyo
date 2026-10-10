@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { AuthStatus } from "@/components/AuthStatus";
@@ -17,6 +18,11 @@ import {
   parsePositiveInt,
   parseSearchConditions,
 } from "@/lib/search-conditions";
+import {
+  LIST_ORIGIN_PARAM,
+  getListOriginTarget,
+  parseListOrigin,
+} from "@/lib/list-origin";
 import { formatPriceForDetail, formatVerifiedDate } from "@/lib/format";
 import { getSceneLabels } from "@/lib/scene-labels";
 import { fetchIsFavorite } from "@/lib/queries/favorites";
@@ -49,6 +55,12 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
 
   const backToSearchHref = buildSearchHref(searchConditions);
   const backToTopHref = buildTopHref(searchConditions);
+
+  // メモ一覧・お気に入りから来た場合（from=notes / from=favorites）だけ、戻りリンクを元の一覧へ向ける。
+  // 戻り先は固定の対応表から決め、from が無効な値のときは従来の「検索結果に戻る」にする
+  const listOrigin = parseListOrigin(getParam(LIST_ORIGIN_PARAM));
+  const listOriginTarget =
+    listOrigin === null ? null : getListOriginTarget(listOrigin);
 
   const retryQuery = new URLSearchParams();
   for (const [key, value] of Object.entries(rawSearchParams)) {
@@ -135,16 +147,28 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
 
   const dishPhotoByDishId = dishPhotosResult.photoByDishId;
 
+  // 戻りリンク（ヘッダーと本文の2か所）。
+  // 一覧から来た場合は、履歴（router.back()）に頼らず、固定の /notes または /favorites への通常のリンクにする。
+  // それ以外（検索結果から来た場合・直接アクセス・無効な from）は、従来の「検索結果に戻る」
+  const renderBackLink = (className: string) =>
+    listOriginTarget !== null ? (
+      <Link href={listOriginTarget.href} className={className}>
+        {`← ${listOriginTarget.label}に戻る`}
+      </Link>
+    ) : (
+      <BackToSearchLink
+        storeId={store.store_id}
+        href={backToSearchHref}
+        className={className}
+      >
+        ← 検索結果に戻る
+      </BackToSearchLink>
+    );
+
   return (
     <>
       <header className={styles.headerBand}>
-        <BackToSearchLink
-          storeId={store.store_id}
-          href={backToSearchHref}
-          className={styles.headerBackLink}
-        >
-          ← 検索結果に戻る
-        </BackToSearchLink>
+        {renderBackLink(styles.headerBackLink)}
 
         <HeaderHomeLink
           className={`${styles.headerInner} ${styles.headerHomeLink}`}
@@ -157,13 +181,7 @@ export default async function StorePage(props: PageProps<"/store/[storeId]">) {
 
       <div className={styles.pageShell}>
         <div className={styles.page}>
-          <BackToSearchLink
-            storeId={store.store_id}
-            href={backToSearchHref}
-            className={styles.backLink}
-          >
-            ← 検索結果に戻る
-          </BackToSearchLink>
+          {renderBackLink(styles.backLink)}
 
           <div className={styles.layoutGrid}>
             <div className={styles.leftColumn}>
