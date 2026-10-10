@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/SearchIcons";
 import styles from "./page.module.css";
-import { toSearchParams, type SearchConditions } from "@/lib/search-conditions";
-
-const SCROLL_STORAGE_KEY_PREFIX = "thai-tabe-tokyo:search-scroll-y:";
-const FROM_SEARCH_STORAGE_KEY = "thai-tabe-tokyo:from-search";
+import type { SearchConditions } from "@/lib/search-conditions";
+import { saveSearchScrollY } from "@/lib/search-scroll";
+import { markCameFromSearch } from "@/lib/from-search-mark";
 
 type StoreDetailLinkProps = {
   href: string;
@@ -20,21 +19,8 @@ export default function StoreDetailLink({
   searchConditions,
 }: StoreDetailLinkProps) {
   const handleClick = () => {
-    try {
-      const scrollKey =
-        SCROLL_STORAGE_KEY_PREFIX + toSearchParams(searchConditions).toString();
-      sessionStorage.setItem(scrollKey, String(window.scrollY));
-    } catch {
-      // ignore
-    }
-    try {
-      sessionStorage.setItem(
-        FROM_SEARCH_STORAGE_KEY,
-        JSON.stringify({ storeId: String(storeId) }),
-      );
-    } catch {
-      // ignore
-    }
+    saveSearchScrollY(searchConditions, window.scrollY);
+    markCameFromSearch(storeId);
   };
 
   return (

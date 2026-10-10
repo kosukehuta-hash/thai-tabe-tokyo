@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/supabase/client", () => ({ createClient: vi.fn() }));
 vi.mock("@/app/logout/actions", () => ({ logout: vi.fn() }));
 
+import { clearCameFromSearchMark } from "@/lib/from-search-mark";
 import { LoggedInStatus, LoggedOutStatus } from "./AuthStatus";
 
 function links(html: string): [string, string][] {
@@ -82,6 +83,39 @@ describe("LoggedInStatus（ログイン時）", () => {
     );
     expect(failed).toContain('role="alert"');
     expect(failed).toContain("ログアウトできませんでした");
+  });
+});
+
+// 関数コンポーネントを直接呼び出して返る要素の木をたどり、リンクごとの onClick を集める
+function collectLinkClicks(node: unknown, out: [string, unknown][] = []) {
+  if (Array.isArray(node)) {
+    node.forEach((child) => collectLinkClicks(child, out));
+  } else if (node && typeof node === "object" && "props" in node) {
+    const props = (node as { props: Record<string, unknown> }).props;
+    if (typeof props.href === "string") {
+      out.push([props.href, props.onClick]);
+    }
+    collectLinkClicks(props.children, out);
+  }
+  return out;
+}
+
+describe("「検索結果から来た」印の削除（ヘッダーのリンク）", () => {
+  it("ログイン時のメモ一覧・お気に入り・アカウント削除は、クリックで印を消す共通関数を呼ぶ", () => {
+    const tree = LoggedInStatus({
+      logoutAction: () => {},
+      isLoggingOut: false,
+      logoutError: null,
+    });
+    const clicks = collectLinkClicks(tree);
+    expect(clicks.map(([href]) => href)).toEqual([
+      "/notes",
+      "/favorites",
+      "/account/delete",
+    ]);
+    clicks.forEach(([, onClick]) => {
+      expect(onClick).toBe(clearCameFromSearchMark);
+    });
   });
 });
 
