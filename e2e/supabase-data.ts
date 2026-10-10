@@ -49,7 +49,7 @@ function readEnvLocalFile(): Record<string, string> {
  * ローカル開発では.env.localへフォールバックする。
  * 値そのものはログに出力しない。
  */
-function readSupabaseEnv(): { url: string; key: string } {
+export function readSupabaseEnv(): { url: string; key: string } {
   const fileVars = readEnvLocalFile();
   const url =
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
