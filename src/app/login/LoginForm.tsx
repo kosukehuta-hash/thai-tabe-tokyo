@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth-rules";
 import { login, type LoginState } from "./actions";
 import styles from "./page.module.css";
 
@@ -37,7 +38,7 @@ export function LoginForm({ next }: { next: string }) {
           name="password"
           type="password"
           required
-          minLength={8}
+          minLength={MIN_PASSWORD_LENGTH}
           autoComplete="current-password"
           className={styles.input}
         />
