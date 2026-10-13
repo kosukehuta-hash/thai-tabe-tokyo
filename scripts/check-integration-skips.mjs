@@ -6,9 +6,9 @@ import { readFileSync } from "node:fs";
 
 // 対象は次の3ファイルの合計。テストを追加・削除したときは、ここも更新する。
 //   src/lib/queries/favorites.security.test.ts          : 22件
-//   src/lib/queries/notes.security.test.ts              :  7件
+//   src/lib/queries/notes.security.test.ts              : 13件
 //   src/app/account/delete/account-delete.security.test.ts : 14件
-const EXPECTED_TOTAL = 43;
+const EXPECTED_TOTAL = 49;
 
 const resultsPath = process.argv[2] ?? "vitest-integration-results.json";
 

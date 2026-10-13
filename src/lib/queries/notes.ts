@@ -15,81 +15,36 @@ export type NoteWithStore = {
 export type NotesFetchResult =
   { status: "error" } | { status: "success"; notes: NoteWithStore[] };
 
+/**
+ * ログイン中のユーザー本人のメモを、店舗の公開・非公開を問わず返す（U06用）。
+ * authenticatedは stores を直接読めないため、DB関数 get_own_notes() を
+ * 1回だけ呼び出す（メモ行と店舗情報の結合・更新日時の新しい順の並びはDB側）。
+ * お気に入り（fetchOwnFavorites / get_own_favorites()）と同じ方式。
+ */
 export async function fetchOwnNotesWithStores(
   supabaseServer: Awaited<ReturnType<typeof createServerSupabaseClient>>,
 ): Promise<NotesFetchResult> {
-  const { data: noteRows, error: noteError } = await supabaseServer
-    .from("store_visit_notes")
-    .select("note_id, store_id, note_text, updated_at")
-    .order("updated_at", { ascending: false });
+  const { data, error } = await supabaseServer.rpc("get_own_notes");
 
-  if (noteError) {
+  if (error) {
     logSupabaseError({
       route: "/notes",
-      operation: "fetchOwnNotesWithStores.notes",
+      operation: "fetchOwnNotesWithStores",
       table: "store_visit_notes",
-      error: noteError,
+      error,
     });
     return { status: "error" };
-  }
-
-  const notes = noteRows ?? [];
-  if (notes.length === 0) {
-    return { status: "success", notes: [] };
-  }
-
-  // stores.SELECTはanonロールにしか付与されていないため、authenticatedの
-  // セッション付きクライアントでは直接storesを取得できない。公開・非公開を問わず
-  // 本人のメモに紐づく店舗の最小限情報（store_id/store_name/is_published）だけを
-  // 返すSECURITY DEFINER関数（get_own_note_store_names）を経由する。
-  const storeIds = [...new Set(notes.map((note) => note.store_id))];
-
-  const { data: storeRows, error: storeError } = await supabaseServer.rpc(
-    "get_own_note_store_names",
-    { p_store_ids: storeIds },
-  );
-
-  if (storeError) {
-    logSupabaseError({
-      route: "/notes",
-      operation: "fetchOwnNotesWithStores.stores",
-      table: "stores",
-      error: storeError,
-    });
-    return { status: "error" };
-  }
-
-  const storeById = new Map<
-    number,
-    { storeName: string; isPublished: boolean }
-  >();
-  for (const row of storeRows ?? []) {
-    storeById.set(row.store_id, {
-      storeName: row.store_name,
-      isPublished: row.is_published,
-    });
   }
 
   return {
     status: "success",
-    notes: notes.flatMap((note) => {
-      const store = storeById.get(note.store_id);
-      if (!store) {
-        // 本人のメモである以上、get_own_note_store_namesは必ず対応する店舗を
-        // 返すはずのため、通常到達しない防御的分岐。整合性が取れない場合は
-        // 一覧から除外する（存在しない店舗名を表示しない）。
-        return [];
-      }
-      return [
-        {
-          noteId: note.note_id,
-          storeId: note.store_id,
-          noteText: note.note_text,
-          updatedAt: note.updated_at,
-          storeName: store.storeName,
-          isPublished: store.isPublished,
-        },
-      ];
-    }),
+    notes: (data ?? []).map((row) => ({
+      noteId: row.note_id,
+      storeId: row.store_id,
+      noteText: row.note_text,
+      updatedAt: row.updated_at,
+      storeName: row.store_name,
+      isPublished: row.is_published,
+    })),
   };
 }
