@@ -6,6 +6,7 @@ import {
   LOCAL_SUPABASE_URL,
   TEST_PASSWORD,
   deleteTestUsersByEmailLike,
+  getLocalAdminKey,
   isLocalSupabaseAvailable,
   newAnonClient,
   queryPsql,
@@ -29,8 +30,9 @@ import {
  * 「削除前」→「削除」→「削除後」の順に状態を進めるため、it は上から順に実行される前提で書いている。
  */
 
-const adminKey = process.env.TEST_LOCAL_ADMIN_KEY;
 const localAvailable = await isLocalSupabaseAvailable();
+// REQUIRE_LOCAL_SUPABASE=1（CI）のときは、未設定ならskipせずエラーになる
+const adminKey = getLocalAdminKey();
 
 function count(table: string, userId: string): number {
   return Number(

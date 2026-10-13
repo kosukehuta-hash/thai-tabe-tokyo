@@ -11,6 +11,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:integration": "vitest run src/lib/queries/favorites.security.test.ts src/lib/queries/notes.security.test.ts src/app/account/delete/account-delete.security.test.ts",
     "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts"
   },
