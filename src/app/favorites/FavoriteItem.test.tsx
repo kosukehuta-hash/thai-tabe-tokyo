@@ -31,8 +31,18 @@ describe("FavoriteItemView（公開店舗）", () => {
   const html = render({ isPublished: true });
 
   it("店舗名から店舗詳細（/store/{id}）へ移動できる。『非公開』は表示しない", () => {
-    expect(html).toMatch(/<a [^>]*href="\/store\/5"[^>]*>テスト食堂<\/a>/);
+    expect(html).toMatch(
+      /<a [^>]*href="\/store\/5\?from=favorites"[^>]*>テスト食堂<\/a>/,
+    );
     expect(html).not.toContain("非公開");
+  });
+
+  it("店舗詳細のリンクには from=favorites を付ける（店舗詳細で『お気に入りに戻る』にするため）。戻り先のURLは含めない", () => {
+    const hrefs = [...html.matchAll(/<a [^>]*href="([^"]*)"/g)].map(
+      (m) => m[1],
+    );
+    expect(hrefs).toEqual(["/store/5?from=favorites"]);
+    expect(html).not.toContain("returnTo");
   });
 
   it("『解除』ボタンがあり、確認ダイアログ用の処理は持たない", () => {

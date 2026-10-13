@@ -1,5 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import Link from "next/link";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -213,5 +214,60 @@ describe("U06 メモ一覧（/notes）の取得失敗と再試行", () => {
     const tree = await NotesPage(props());
     expect(findElements(tree, ListFetchError)).toHaveLength(0);
     expect(JSON.stringify(tree)).toContain("まだメモがありません");
+  });
+});
+
+describe("U06 メモ一覧（/notes）から店舗詳細へのリンク", () => {
+  beforeEach(() => {
+    mocks.fetchOwnNotesWithStores.mockResolvedValue({
+      status: "success",
+      notes: [
+        NOTE,
+        { ...NOTE, noteId: 2, storeId: 20, storeName: "別の食堂" },
+        {
+          ...NOTE,
+          noteId: 3,
+          storeId: 30,
+          storeName: "非公開の食堂",
+          isPublished: false,
+        },
+      ],
+    });
+  });
+
+  it("公開店舗のリンクには from=notes を付ける（店舗詳細で『メモ一覧に戻る』にするため）", async () => {
+    const tree = await NotesPage(props());
+    const hrefs = findElements(tree, Link).map((link) => link.props.href);
+    expect(hrefs).toEqual(["/store/10?from=notes", "/store/20?from=notes"]);
+  });
+
+  it("非公開店舗には店舗詳細へのリンクを付けない（従来どおり）", async () => {
+    const tree = await NotesPage(props());
+    const hrefs = findElements(tree, Link).map((link) =>
+      String(link.props.href),
+    );
+    expect(hrefs.some((href) => href.includes("/store/30"))).toBe(false);
+    // 店舗名と『非公開』のバッジは表示する（リンクにはしない）
+    const spanTexts = findElements(tree, "span").map(
+      (span) => span.props.children,
+    );
+    expect(spanTexts).toContain("非公開の食堂");
+    expect(spanTexts).toContain("非公開");
+  });
+
+  it("一覧自身の returnTo（閉じるの戻り先）は、店舗詳細のリンクに引き継がない", async () => {
+    const tree = await NotesPage(
+      props({ returnTo: "/search?area_id=1&time=lunch" }),
+    );
+    const hrefs = findElements(tree, Link).map((link) =>
+      String(link.props.href),
+    );
+    expect(hrefs).toEqual(["/store/10?from=notes", "/store/20?from=notes"]);
+    for (const href of hrefs) {
+      expect(href).not.toContain("returnTo");
+    }
+    // 『閉じる』の戻り先は従来どおり
+    const [layout] = findElements(tree, ListPageLayout);
+    expect(layout.props.returnTo).toBe("/search?area_id=1&time=lunch");
   });
 });

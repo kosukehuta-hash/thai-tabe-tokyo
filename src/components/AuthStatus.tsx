@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logout, type LogoutState } from "@/app/logout/actions";
-import { FROM_SEARCH_STORAGE_KEY } from "@/app/store/[storeId]/BackToSearchLink";
+import { clearCameFromSearchMark } from "@/lib/from-search-mark";
 import { buildListHref, resolveHeaderReturnTo } from "@/lib/return-to";
 import styles from "./AuthStatus.module.css";
 
@@ -18,13 +18,7 @@ const AUTH_ENTRY_PATHS = new Set(["/login", "/signup"]);
 // U03を離れて検索結果以外の画面（ログイン画面、メモ一覧、お気に入り等）へ移動する場合は、
 // 「検索結果から来た」印を削除する。印を残したままU03へ戻ると、
 // 「検索結果に戻る」がrouter.back()で直前の画面（一覧等）へ戻ってしまう。
-function clearFromSearchMark() {
-  try {
-    sessionStorage.removeItem(FROM_SEARCH_STORAGE_KEY);
-  } catch {
-    // ignore
-  }
-}
+// （印の削除は clearCameFromSearchMark を使う）
 
 export function AuthStatus() {
   const [authState, setAuthState] = useState<AuthState>("checking");
@@ -110,7 +104,7 @@ export function AuthStatus() {
     return (
       <LoggedOutStatus
         nextPath={nextPath}
-        onNavigateAway={clearFromSearchMark}
+        onNavigateAway={clearCameFromSearchMark}
       />
     );
   }
@@ -173,14 +167,14 @@ export function LoggedInStatus({
       <Link
         href={buildListHref("/notes", returnTo)}
         className={styles.authLink}
-        onClick={clearFromSearchMark}
+        onClick={clearCameFromSearchMark}
       >
         メモ一覧
       </Link>
       <Link
         href={buildListHref("/favorites", returnTo)}
         className={styles.authLink}
-        onClick={clearFromSearchMark}
+        onClick={clearCameFromSearchMark}
       >
         お気に入り
       </Link>
@@ -197,7 +191,7 @@ export function LoggedInStatus({
       <Link
         href={buildListHref("/account/delete", returnTo)}
         className={styles.authLink}
-        onClick={clearFromSearchMark}
+        onClick={clearCameFromSearchMark}
       >
         アカウント削除
       </Link>

@@ -21,10 +21,10 @@
 - 仕様書にない機能や技術を独自に追加しない
 
 ## 技術構成
-- 採用技術はNext.js 16.3.4、React 19.2.8、TypeScript、CSS Modules、Supabase
+- 採用技術はNext.js 16.3.8、React 19.2.8、TypeScript、CSS Modules、Supabase
 - Tailwind CSSや追加のUIライブラリを導入しない
 - 認証には `@supabase/ssr` を使用する
-- Next.js 16.3.4ではmiddleware.tsではなくproxy.tsを使用する
+- Next.js 16.3.8ではmiddleware.tsではなくproxy.tsを使用する
 - ローカルSupabaseを使うVitest統合テスト43件（RLS・DB関数・退会）は、CIの `integration-tests` jobで、job内に起動したローカルSupabase上で必ず実行し、skipを許可しない（`REQUIRE_LOCAL_SUPABASE=1`）。クラウドSupabase（GitHub Secrets）の接続情報は、このjobへ渡さない
 
 ## DB
@@ -97,7 +97,10 @@
 ## 調査・実装ルール
 - 修正前に現在のコード・仕様・既存設定を確認する
 - 既存の仕組みがある場合は、重複実装せず既存構成を優先する
+- 認証・退会・決済・外部API連携など、処理順や分岐が重要な機能は、必要に応じてREADMEや設計資料にMermaidのsequenceDiagramで可視化する。
 - 原因調査の依頼では、確認が終わるまでコードを変更しない
+- README・仕様書・CI・実装は常に同期する。READMEや仕様書に「CIで自動実行」と記載した処理は、workflowに実装されていることを必ず確認する
+- CI（`.github/workflows/`）を変更するときは、README・仕様書との整合性を確認し、build・test・lint・typecheck・permissions等の実行内容と記載を一致させる。不一致を見つけたら、実装側かドキュメント側のどちらを直すか判断して報告する（仕様書は「仕様書」の規則どおり、依頼があるときだけ変更する）
 
 ## 変更対象の管理
 - 今回の依頼に関係しないファイルは変更しない

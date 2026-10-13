@@ -98,7 +98,12 @@
     gap: 6px;
   }
 
+  /* タップできる高さを44px以上にする（要件仕様書 17_非機能要件 NF13）。
+     リンクの文字は、44pxの箱の縦方向の中央に置く */
   .authLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-size: 12px;
   }
 

@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+# 全jobで、リポジトリの読み取り権限だけを付与する（書き込み・PRコメント等の権限は不要）
+permissions:
+  contents: read
+
 jobs:
   quality-checks:
     name: Format / Lint / Typecheck / Test
@@ -36,6 +40,14 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # クラウドSupabase（GitHub Secrets）には接続しない。ビルドに必要な環境変数はダミー値を使う
+      # （本番ビルドはDBへアクセスしない。next.config.ts と src/lib/supabase.ts が値の存在だけを確認する）
+      - name: Build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy-publishable-key
+        run: npm run build
 
       - name: Unit tests
         run: npm run test
