@@ -12,7 +12,7 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/supabase/server", () => ({ createClient }));
 vi.mock("@/lib/supabase/auth", () => ({ getAuthenticatedUserId }));
 
-import { saveNote } from "./actions";
+import { saveNote } from "./store-visit-note";
 import {
   NOTE_MAX_LENGTH,
   TOO_LONG_NOTE_ERROR_MESSAGE,

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // StoreVisitNote が読み込む Server Action（実体はサーバー用Supabaseクライアントを使う）は、モックに差し替える
-vi.mock("@/app/store/[storeId]/actions", () => ({
+vi.mock("@/actions/store-visit-note", () => ({
   saveNote: vi.fn(),
   deleteNote: vi.fn(),
 }));

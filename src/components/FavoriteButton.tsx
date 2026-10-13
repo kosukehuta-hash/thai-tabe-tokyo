@@ -5,7 +5,7 @@ import {
   addFavorite,
   removeFavorite,
   type FavoriteActionState,
-} from "@/app/favorites/actions";
+} from "@/actions/favorites";
 import styles from "./FavoriteButton.module.css";
 
 // 現在の状態に応じて、登録・解除のどちらのServer Actionを呼ぶかを選ぶ。

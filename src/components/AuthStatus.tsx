@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { logout, type LogoutState } from "@/app/logout/actions";
+import { logout, type LogoutState } from "@/actions/logout";
 import { clearCameFromSearchMark } from "@/lib/from-search-mark";
 import { buildListHref, resolveHeaderReturnTo } from "@/lib/return-to";
 import styles from "./AuthStatus.module.css";

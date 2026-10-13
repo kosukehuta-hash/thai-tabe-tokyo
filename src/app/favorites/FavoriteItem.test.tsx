@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // FavoriteItem が読み込む Server Action（実体はサーバー用Supabaseクライアントを使う）はモックに差し替える。
-vi.mock("./actions", () => ({ removeFavorite: vi.fn() }));
+vi.mock("@/actions/favorites", () => ({ removeFavorite: vi.fn() }));
 
 import { FavoriteItemView } from "./FavoriteItem";
 

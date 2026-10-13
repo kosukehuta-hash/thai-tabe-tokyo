@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import listStyles from "@/components/ListPage.module.css";
 import { buildStoreHrefFromList } from "@/lib/list-origin";
-import { removeFavorite } from "./actions";
+import { removeFavorite } from "@/actions/favorites";
 import styles from "./FavoriteItem.module.css";
 
 type FavoriteItemViewProps = {
