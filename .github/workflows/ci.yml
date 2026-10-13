@@ -49,7 +49,11 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: dummy-publishable-key
         run: npm run build
 
+      # タイムゾーンをUTCに明示する。手元（日本時間）では必ず正しく見える日時のずれを、
+      # 日本時間以外の環境で実行して機械的に見つけるため（runnerの既定値には頼らない）
       - name: Unit tests
+        env:
+          TZ: UTC
         run: npm run test
 
   # RLS・DB関数・アカウント削除（ON DELETE CASCADE等）の統合テスト43件を、
