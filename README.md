@@ -101,7 +101,7 @@ THAI TABE TOKYOは、東京でタイ料理を楽しみたい人が、
 
 | カテゴリ | 技術 |
 | --- | --- |
-| フレームワーク | Next.js 16.3.4（App Router） |
+| フレームワーク | Next.js 16.3.8（App Router） |
 | UIライブラリ | React 19.2.8 |
 | 言語 | TypeScript 5.9.3 |
 | スタイリング | CSS Modules |

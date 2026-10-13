@@ -21,10 +21,10 @@
 - 仕様書にない機能や技術を独自に追加しない
 
 ## 技術構成
-- 採用技術はNext.js 16.3.4、React 19.2.8、TypeScript、CSS Modules、Supabase
+- 採用技術はNext.js 16.3.8、React 19.2.8、TypeScript、CSS Modules、Supabase
 - Tailwind CSSや追加のUIライブラリを導入しない
 - 認証には `@supabase/ssr` を使用する
-- Next.js 16.3.4ではmiddleware.tsではなくproxy.tsを使用する
+- Next.js 16.3.8ではmiddleware.tsではなくproxy.tsを使用する
 
 ## DB
 - DBはareas、dishes、stores、store_dishes、store_photosの既存5テーブルに、store_visit_notes（店舗メモ）、store_favorites（お気に入り）を加えた7テーブルとする
