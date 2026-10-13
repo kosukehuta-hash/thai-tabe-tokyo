@@ -55,7 +55,7 @@ describe("メモの文字数上限（NOTE_MAX_LENGTH）", () => {
   it("画面（StoreVisitNote）とServer Action（saveNote）は、どちらも共通の定義を使っている", () => {
     for (const file of [
       "src/components/StoreVisitNote.tsx",
-      "src/app/store/[storeId]/actions.ts",
+      "src/actions/store-visit-note.ts",
     ]) {
       expect(read(path.join(ROOT, file)), file).toMatch(
         /from\s+["']@\/lib\/note-limits["']/,

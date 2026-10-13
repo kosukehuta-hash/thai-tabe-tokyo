@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 // 読み込み時に環境変数（サーバー用クライアント）を要求するため、モックに差し替える。
 // ここでは表示部分（LoggedInStatus / LoggedOutStatus）だけを検査する。
 vi.mock("@/lib/supabase/client", () => ({ createClient: vi.fn() }));
-vi.mock("@/app/logout/actions", () => ({ logout: vi.fn() }));
+vi.mock("@/actions/logout", () => ({ logout: vi.fn() }));
 
 import { clearCameFromSearchMark } from "@/lib/from-search-mark";
 import { LoggedInStatus, LoggedOutStatus } from "./AuthStatus";

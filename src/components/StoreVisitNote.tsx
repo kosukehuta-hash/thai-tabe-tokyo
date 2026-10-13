@@ -6,7 +6,7 @@ import {
   deleteNote,
   type SaveNoteState,
   type DeleteNoteState,
-} from "@/app/store/[storeId]/actions";
+} from "@/actions/store-visit-note";
 import { NOTE_MAX_LENGTH } from "@/lib/note-limits";
 import styles from "./StoreVisitNote.module.css";
 

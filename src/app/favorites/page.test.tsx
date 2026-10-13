@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 // ListPageLayout → AuthStatus が読み込むブラウザ用クライアント・ログアウトのServer Actionは
 // 読み込み時に環境変数を要求する。ここでは要素の木を検査するだけで描画しないため、モックに差し替える
 vi.mock("@/lib/supabase/client", () => ({ createClient: vi.fn() }));
-vi.mock("@/app/logout/actions", () => ({ logout: vi.fn() }));
+vi.mock("@/actions/logout", () => ({ logout: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/supabase/auth", () => ({
   getAuthenticatedUserId: mocks.getAuthenticatedUserId,
@@ -21,7 +21,7 @@ vi.mock("@/lib/supabase/auth", () => ({
 vi.mock("@/lib/queries/favorites", () => ({
   fetchOwnFavorites: mocks.fetchOwnFavorites,
 }));
-vi.mock("./actions", () => ({ removeFavorite: vi.fn() }));
+vi.mock("@/actions/favorites", () => ({ removeFavorite: vi.fn() }));
 
 import FavoritesPage from "./page";
 import { FavoriteItem } from "./FavoriteItem";

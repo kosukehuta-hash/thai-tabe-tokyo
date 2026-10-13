@@ -6,7 +6,7 @@ const { addFavorite, removeFavorite } = vi.hoisted(() => ({
   removeFavorite: vi.fn(),
 }));
 
-vi.mock("@/app/favorites/actions", () => ({ addFavorite, removeFavorite }));
+vi.mock("@/actions/favorites", () => ({ addFavorite, removeFavorite }));
 
 import { FavoriteButtonView, toggleFavorite } from "./FavoriteButton";
 

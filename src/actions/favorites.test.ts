@@ -12,7 +12,7 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/supabase/server", () => ({ createClient }));
 vi.mock("@/lib/supabase/auth", () => ({ getAuthenticatedUserId }));
 
-import { addFavorite, removeFavorite } from "./actions";
+import { addFavorite, removeFavorite } from "./favorites";
 
 const AUTH_MESSAGE =
   "ログイン状態を確認できませんでした。再度ログインしてください。";
