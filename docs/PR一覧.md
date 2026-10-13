@@ -1,6 +1,6 @@
 # THAI TABE TOKYO PR一覧
 
-GitHub上のPull Request（#1〜#121、実PR92件）を確認して作成した一覧です。
+GitHub上のPull Request（#1〜#122、実PR93件）を確認して作成した一覧です。
 番号の欠番（#6, #8, #9, #14〜17, #22〜28, #30〜39）はPRではなくIssueとして使われた番号です。
 
 ## PR一覧
@@ -99,3 +99,4 @@ GitHub上のPull Request（#1〜#121、実PR92件）を確認して作成した�
 | 119 | docs: READMEに開発の進め方を追加し、PRテンプレートにREADME確認欄を追加する（X3-22）                   | README.md に「## 開発の進め方（AI駆動開発）」を追加（「今後の実装・改善予定」の直前）。仕様書を正とする／1機能1PR／テスト結果の4区分／秘密キーは環境変数で管理、の4点を1項目ずつ記…                      | なし       | format:check（Prettier）成功、PR本文の解析スクリプト（scripts/pr-body-fields.mjs）で確認：新しい節を含む本文でも…                                          | Merged | 2026-10-13 | 追加した「ドキュメント確認」は任意の欄で、未チェックでもPR本文チェックは失敗しない（必須4項目のチェックは従来どおり）…    |
 | 120 | docs: READMEにデモアカウントのリセット手順と店舗情報の出典を追記する（X3-17・X3-19）                  | README.md の「確認手順」の後に「### デモアカウントのリセット（管理者向け）」を追加（パスワードを戻す手順、メモ・お気に入りを対象ユーザーの行だけ削除する手順、ログイン後の確認8手順、本番…               | なし       | format:check（Prettier）成功、文面は、「最終確認日」が店舗詳細に表示されること、U08の「アカウントを削除する」ボタンと「デモアカウントは削…                 | Merged | 2026-10-13 | 手順は管理者向けの運用メモで、実際のSupabase Dashboardでの操作は、このPRでは実行していない（手順の文…                     |
 | 121 | refactor: 共通部品が参照するServer Actionを src/actions へ移し、依存の向きをそろえる（X3-13）         | `src/components` が `src/app` 配下の Server Action 3件を直接 import していた依存を解消した。ファイルを `git mv` で移動（履歴を保持）：、-…                                                               | なし       | ローカル（TZ=UTC）で成功：format:check、lint、typecheck、Vitest（501件成功・43件スキップ。移動前の498件から、追加し…                                       | Merged | 2026-10-13 | 仕様書・READMEにこれらのファイルパスの記載はなかった（確認済み）。仕様書の15_2（Vitestテスト一覧）への追…                 |
+| 122 | feat: メモ一覧の取得を、DB関数 get_own_notes() 1本の呼び出しにそろえる（X3-15）                       | メモ一覧（U06）の取得を、「メモ取得 → 店舗名取得（`get_own_note_store_names`）」の2回のDB呼び出しから、DB関数 `get_own_notes()` 1回に変更した。…                                                         | なし       | ローカルSupabase（Docker）に新しいmigrationを適用して実行：統合テスト49件すべて成功（失敗0・skip 0。既存43件＋追加6件）。追加…                             | Merged | 2026-10-13 | 【重要・マージの順序】本番のSupabaseに、このPRの migration（`get_own_notes()` の追…                                       |
