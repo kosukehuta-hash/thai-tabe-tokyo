@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
 
 /**
  * TC-COM-01〜03（U02のレスポンシブ列数・スマホ横型カード）を、

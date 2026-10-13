@@ -49,7 +49,7 @@ function readEnvLocalFile(): Record<string, string> {
  * ローカル開発では.env.localへフォールバックする。
  * 値そのものはログに出力しない。
  */
-function readSupabaseEnv(): { url: string; key: string } {
+export function readSupabaseEnv(): { url: string; key: string } {
   const fileVars = readEnvLocalFile();
   const url =
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
@@ -64,6 +64,14 @@ function readSupabaseEnv(): { url: string; key: string } {
     );
   }
   return { url, key };
+}
+
+/**
+ * SupabaseのURLのオリジン（https://<project>.supabase.co の形）。
+ * 画像通信を止める対象の判定（e2e/fixtures.ts）に使う。値そのものはログに出力しない。
+ */
+export function getSupabaseOrigin(): string {
+  return new URL(readSupabaseEnv().url).origin;
 }
 
 async function restGet<T>(queryPath: string): Promise<T> {
