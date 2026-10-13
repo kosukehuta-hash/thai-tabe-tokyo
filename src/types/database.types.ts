@@ -359,6 +359,17 @@ export type Database = {
           store_name: string
         }[]
       }
+      get_own_notes: {
+        Args: never
+        Returns: {
+          is_published: boolean
+          note_id: number
+          note_text: string
+          store_id: number
+          store_name: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -56,7 +56,7 @@ jobs:
           TZ: UTC
         run: npm run test
 
-  # RLS・DB関数・アカウント削除（ON DELETE CASCADE等）の統合テスト43件を、
+  # RLS・DB関数・アカウント削除（ON DELETE CASCADE等）の統合テスト49件を、
   # このjob内で起動したローカルSupabase上で必ず実行する。
   # クラウドSupabase（GitHub Secrets）の接続情報は一切渡さない。
   # REQUIRE_LOCAL_SUPABASE=1 により、ローカルSupabaseが使えない場合はskipではなく失敗になる。
@@ -154,10 +154,10 @@ jobs:
           } >> "$GITHUB_ENV"
           rm -f "$status_file"
 
-      - name: Run integration tests (43 tests)
+      - name: Run integration tests (49 tests)
         run: npm run test:integration -- --reporter=default --reporter=json --outputFile.json=vitest-integration-results.json
 
-      # 43件すべて成功・skipped 0・failed 0であることを確認する（1件でもskipがあれば失敗）
+      # 49件すべて成功・skipped 0・failed 0であることを確認する（1件でもskipがあれば失敗）
       - name: Verify no integration test was skipped
         if: always()
         run: node scripts/check-integration-skips.mjs vitest-integration-results.json

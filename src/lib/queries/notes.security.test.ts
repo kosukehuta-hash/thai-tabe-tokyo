@@ -175,3 +175,138 @@ describe.skipIf(!localAvailable)(
     });
   },
 );
+
+describe.skipIf(!localAvailable)(
+  "U06: get_own_notes のセキュリティ確認（ローカルSupabase専用）",
+  () => {
+    const RUN_ID = Date.now();
+    const userCEmail = `vitest-own-notes-${RUN_ID}-c@example.com`;
+    const userDEmail = `vitest-own-notes-${RUN_ID}-d@example.com`;
+    const noteTextC1 = `vitest-own-notes-${RUN_ID} userCメモ1`;
+    const noteTextC2 = `vitest-own-notes-${RUN_ID} userCメモ2`;
+    const noteTextD = `vitest-own-notes-${RUN_ID} userDメモ`;
+
+    let storeId1: number;
+    let storeId2: number;
+    let clientC: SupabaseClient<Database>;
+    let clientD: SupabaseClient<Database>;
+
+    beforeAll(async () => {
+      const anon = newAnonClient();
+      const { data: stores, error } = await anon
+        .from("stores")
+        .select("store_id")
+        .eq("is_published", true)
+        .order("store_id", { ascending: true })
+        .limit(2);
+      if (error || !stores || stores.length < 2) {
+        throw new Error(
+          "テスト前提: 公開店舗が2件以上必要です。ローカルSupabaseのシードデータを確認してください。",
+        );
+      }
+      [storeId1, storeId2] = stores.map((s) => s.store_id);
+
+      let userCId: string;
+      let userDId: string;
+      ({ client: clientC, userId: userCId } = await signUpTestUser(userCEmail));
+      ({ client: clientD, userId: userDId } = await signUpTestUser(userDEmail));
+
+      // Cは店舗1→店舗2の順に登録し、その後に店舗1のメモを更新する
+      // （更新日時の新しい順は 店舗1 → 店舗2 になる）
+      for (const [storeId, noteText] of [
+        [storeId1, noteTextC1],
+        [storeId2, noteTextC2],
+      ] as const) {
+        const { error: insertError } = await clientC
+          .from("store_visit_notes")
+          .insert({ store_id: storeId, note_text: noteText, user_id: userCId });
+        if (insertError) {
+          throw new Error(`メモC登録に失敗: ${insertError.message}`);
+        }
+      }
+      const { error: insertDError } = await clientD
+        .from("store_visit_notes")
+        .insert({ store_id: storeId1, note_text: noteTextD, user_id: userDId });
+      if (insertDError) {
+        throw new Error(`メモD登録に失敗: ${insertDError.message}`);
+      }
+      const { error: updateError } = await clientC
+        .from("store_visit_notes")
+        .update({ note_text: noteTextC1 })
+        .eq("store_id", storeId1);
+      if (updateError) {
+        throw new Error(`メモC更新に失敗: ${updateError.message}`);
+      }
+    });
+
+    afterAll(() => {
+      runPsql(
+        `update public.stores set is_published = true where store_id in (${storeId1}, ${storeId2});`,
+      );
+      runPsql(
+        `delete from public.store_visit_notes where note_text like 'vitest-own-notes-${RUN_ID}%';`,
+      );
+      deleteTestUsersByEmailLike(`vitest-own-notes-${RUN_ID}-%@example.com`);
+    });
+
+    it("get_own_notes: 本人のメモだけを、更新日時の新しい順に、店舗名・公開状態つきで返す", async () => {
+      const { data, error } = await clientC.rpc("get_own_notes");
+      expect(error).toBeNull();
+      expect(data?.map((n) => n.note_text)).toEqual([noteTextC1, noteTextC2]);
+      expect(data?.map((n) => n.store_id)).toEqual([storeId1, storeId2]);
+      for (const note of data ?? []) {
+        expect(note.store_name.length).toBeGreaterThan(0);
+        expect(note.is_published).toBe(true);
+      }
+    });
+
+    it("get_own_notes: 返す列は最小限の6列だけ（他人のuser_idなどを含まない）", async () => {
+      const { data, error } = await clientC.rpc("get_own_notes");
+      expect(error).toBeNull();
+      expect(Object.keys(data?.[0] ?? {}).sort()).toEqual([
+        "is_published",
+        "note_id",
+        "note_text",
+        "store_id",
+        "store_name",
+        "updated_at",
+      ]);
+    });
+
+    it("get_own_notes: 他ユーザーのメモは含まれない", async () => {
+      const { data, error } = await clientD.rpc("get_own_notes");
+      expect(error).toBeNull();
+      expect(data?.map((n) => n.note_text)).toEqual([noteTextD]);
+    });
+
+    it("get_own_notes: 店舗が非公開になっても、本人のメモは店舗名とis_published=falseで返す", async () => {
+      runPsql(
+        `update public.stores set is_published = false where store_id = ${storeId2};`,
+      );
+      const { data, error } = await clientC.rpc("get_own_notes");
+      expect(error).toBeNull();
+      const note = data?.find((n) => n.store_id === storeId2);
+      expect(note?.is_published).toBe(false);
+      expect(note?.store_name.length).toBeGreaterThan(0);
+    });
+
+    it("get_own_notes: anonロールからは実行できない（42501）", async () => {
+      const anon = newAnonClient();
+      const { data, error } = await anon.rpc("get_own_notes");
+      expect(data).toBeNull();
+      expect(error?.code).toBe("42501");
+    });
+
+    it("fetchOwnNotesWithStores: get_own_notes 経由でも、本人のメモだけを新しい順に返す", async () => {
+      const result = await fetchOwnNotesWithStores(clientC);
+      expect(result.status).toBe("success");
+      if (result.status !== "success") {
+        return;
+      }
+      expect(result.notes.map((n) => n.noteText)).toEqual([
+        noteTextC1,
+        noteTextC2,
+      ]);
+    });
+  },
+);
