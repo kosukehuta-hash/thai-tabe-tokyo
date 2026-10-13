@@ -7,9 +7,9 @@ import {
   type SaveNoteState,
   type DeleteNoteState,
 } from "@/app/store/[storeId]/actions";
+import { NOTE_MAX_LENGTH } from "@/lib/note-limits";
 import styles from "./StoreVisitNote.module.css";
 
-const NOTE_MAX_LENGTH = 500;
 const DELETE_CONFIRM_MESSAGE = "このメモを削除しますか？";
 
 const initialSaveState: SaveNoteState = { error: null, noteText: null };

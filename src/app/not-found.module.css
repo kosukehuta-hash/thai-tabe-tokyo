@@ -1,0 +1,95 @@
+/* 404画面。色・文字・角丸は既存の画面と同じ系統
+   （本文 #2b2118・補助文 #6f6255 は一覧画面、強調色 #b65c1f はエラー画面、
+   ボタンの緑 #1f4d3a・丸い形は「閉じる」リンクと検索ボタンに合わせている）。
+   OSがダークモードのときも読めるよう、本文領域の背景は白を明示する。 */
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 56px 16px;
+  background-color: #ffffff;
+  color: #2b2118;
+  font-family: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+}
+
+.code {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #b65c1f;
+}
+
+.title {
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: #2b2118;
+}
+
+.description {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #6f6255;
+  /* 対応ブラウザでは、スマホ幅で単語の途中（「お／探し」など）で折り返さない。非対応では無視される */
+  word-break: auto-phrase;
+}
+
+/* 2つの文を別の行にして、PC幅で文の途中（「ご確認のう／え」など）で折り返さないようにする */
+.descriptionLine {
+  display: block;
+}
+
+/* タップしやすいよう、押せる範囲の高さを44px以上にする */
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 28px;
+  padding: 0 28px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #1f4d3a;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .homeLink:hover {
+    background-color: #163a2b;
+  }
+}
+
+.homeLink:focus-visible {
+  outline: 2px solid #1f4d3a;
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: 40px 16px;
+  }
+
+  .code {
+    font-size: 52px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+}
