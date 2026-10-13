@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import listStyles from "@/components/ListPage.module.css";
+import { buildStoreHrefFromList } from "@/lib/list-origin";
 import { removeFavorite } from "./actions";
 import styles from "./FavoriteItem.module.css";
 
@@ -30,7 +31,10 @@ export function FavoriteItemView({
       <div className={listStyles.itemHeader}>
         <span className={listStyles.storeNameGroup}>
           {isPublished ? (
-            <Link href={`/store/${storeId}`} className={listStyles.storeLink}>
+            <Link
+              href={buildStoreHrefFromList(storeId, "favorites")}
+              className={listStyles.storeLink}
+            >
               {storeName}
             </Link>
           ) : (

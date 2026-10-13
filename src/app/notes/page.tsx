@@ -7,6 +7,7 @@ import { ListFetchError } from "@/components/ListFetchError";
 import listStyles from "@/components/ListPage.module.css";
 import { formatDateTimeJst } from "@/lib/format";
 import { fetchOwnNotesWithStores } from "@/lib/queries/notes";
+import { buildStoreHrefFromList } from "@/lib/list-origin";
 import {
   RETURN_TO_PARAM,
   buildListHref,
@@ -61,7 +62,7 @@ export default async function NotesPage(props: PageProps<"/notes">) {
                 <span className={listStyles.storeNameGroup}>
                   {note.isPublished ? (
                     <Link
-                      href={`/store/${note.storeId}`}
+                      href={buildStoreHrefFromList(note.storeId, "notes")}
                       className={listStyles.storeLink}
                     >
                       {note.storeName}
