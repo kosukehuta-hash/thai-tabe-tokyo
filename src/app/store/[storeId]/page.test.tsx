@@ -1,4 +1,5 @@
 import { isValidElement, type ReactNode } from "react";
+import Link from "next/link";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -33,6 +34,7 @@ vi.mock("@/lib/queries/favorites", () => ({
 }));
 
 import StorePage from "./page";
+import BackToSearchLink from "./BackToSearchLink";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { StoreVisitNote } from "@/components/StoreVisitNote";
 import { StoreErrorMessage } from "./StoreStatusMessages";
@@ -79,10 +81,12 @@ const store = {
   is_published: true,
 };
 
-async function renderStorePage() {
+async function renderStorePage(
+  searchParams: Record<string, string | string[] | undefined> = {},
+) {
   return StorePage({
     params: Promise.resolve({ storeId: "1" }),
-    searchParams: Promise.resolve({}),
+    searchParams: Promise.resolve(searchParams),
   } as unknown as Parameters<typeof StorePage>[0]);
 }
 
@@ -188,5 +192,160 @@ describe("U03 お気に入りボタンの組み込み", () => {
     expect(client).toHaveProperty("auth");
     expect(storeId).toBe(1);
     expect(mocks.fetchIsFavorite.mock.calls[0]).toHaveLength(2);
+  });
+});
+
+type BackLinkProps = {
+  href: string;
+  className: string;
+  children: string;
+  storeId?: number;
+};
+
+// ヘッダーと本文の2か所にある戻りリンク。検索結果へ戻る既存の部品（BackToSearchLink）と、
+// 一覧へ戻る通常のリンク（next/link）を、それぞれ探す
+function backLinks(tree: ReactNode) {
+  return {
+    search: findElements(tree, BackToSearchLink) as { props: BackLinkProps }[],
+    list: findElements(tree, Link) as { props: BackLinkProps }[],
+  };
+}
+
+describe("U03 戻りリンクの出し分け（検索結果・メモ一覧・お気に入り）", () => {
+  beforeEach(() => {
+    mocks.getClaims.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("from なし（直接アクセス）→ 従来どおり『← 検索結果に戻る』（/search）。ヘッダーと本文の2か所", async () => {
+    const { search, list } = backLinks(await renderStorePage());
+    expect(list).toHaveLength(0);
+    expect(search).toHaveLength(2);
+    for (const link of search) {
+      expect(link.props.href).toBe("/search");
+      expect(link.props.children).toBe("← 検索結果に戻る");
+      expect(link.props.storeId).toBe(1);
+    }
+  });
+
+  it("検索条件つき（検索結果から来た場合）→ 従来どおり、検索条件を保持した /search へのリンク", async () => {
+    const { search, list } = backLinks(
+      await renderStorePage({
+        area_id: "1",
+        time: "lunch",
+        scene: "solo",
+        dish_id: "3",
+      }),
+    );
+    expect(list).toHaveLength(0);
+    expect(search).toHaveLength(2);
+    for (const link of search) {
+      expect(link.props.href).toBe(
+        "/search?area_id=1&time=lunch&scene=solo&dish_id=3",
+      );
+      expect(link.props.children).toBe("← 検索結果に戻る");
+    }
+  });
+
+  it("from=notes → 『← メモ一覧に戻る』（/notes への通常のリンク）。ヘッダーと本文の2か所で、検索結果へ戻る部品は使わない", async () => {
+    const { search, list } = backLinks(
+      await renderStorePage({ from: "notes" }),
+    );
+    expect(search).toHaveLength(0);
+    expect(list).toHaveLength(2);
+    for (const link of list) {
+      expect(link.props.href).toBe("/notes");
+      expect(link.props.children).toBe("← メモ一覧に戻る");
+    }
+  });
+
+  it("from=favorites → 『← お気に入りに戻る』（/favorites への通常のリンク）", async () => {
+    const { search, list } = backLinks(
+      await renderStorePage({ from: "favorites" }),
+    );
+    expect(search).toHaveLength(0);
+    expect(list).toHaveLength(2);
+    for (const link of list) {
+      expect(link.props.href).toBe("/favorites");
+      expect(link.props.children).toBe("← お気に入りに戻る");
+    }
+  });
+
+  it("ヘッダーと本文のリンクは、それぞれ元の見た目（クラス）を保つ", async () => {
+    const fromList = backLinks(await renderStorePage({ from: "notes" })).list;
+    const fromSearch = backLinks(await renderStorePage()).search;
+    expect(fromList.map((l) => l.props.className)).toEqual(
+      fromSearch.map((l) => l.props.className),
+    );
+    expect(new Set(fromList.map((l) => l.props.className)).size).toBe(2);
+  });
+
+  it("from=notes でも、検索条件は戻り先に使わない（戻り先は固定の /notes）", async () => {
+    const { list } = backLinks(
+      await renderStorePage({ from: "notes", area_id: "1", time: "lunch" }),
+    );
+    expect(list.map((l) => l.props.href)).toEqual(["/notes", "/notes"]);
+  });
+
+  it.each([
+    ["外部URL", "https://evil.example"],
+    ["プロトコル相対URL", "//evil.example"],
+    ["バックスラッシュ始まり", "/\\evil"],
+    ["制御文字を含む", "notes\n"],
+    ["パス形式（/notes）", "/notes"],
+    ["パス形式（/favorites）", "/favorites"],
+    ["大文字小文字が違う", "Notes"],
+    ["別の文字列", "search"],
+    ["空文字", ""],
+  ])(
+    "不正な from（%s）→ 一覧へは戻らず、従来の『← 検索結果に戻る』にフォールバックする",
+    async (_label, value) => {
+      const { search, list } = backLinks(
+        await renderStorePage({ from: value, area_id: "2" }),
+      );
+      expect(list).toHaveLength(0);
+      expect(search).toHaveLength(2);
+      for (const link of search) {
+        expect(link.props.href).toBe("/search?area_id=2");
+        expect(link.props.children).toBe("← 検索結果に戻る");
+      }
+    },
+  );
+
+  it("from が複数指定された場合は先頭の値だけを検証して使う（先頭が有効なら一覧、先頭が不正なら検索結果）", async () => {
+    const first = backLinks(
+      await renderStorePage({ from: ["favorites", "https://evil.example"] }),
+    );
+    expect(first.list.map((l) => l.props.href)).toEqual([
+      "/favorites",
+      "/favorites",
+    ]);
+
+    const second = backLinks(
+      await renderStorePage({ from: ["https://evil.example", "notes"] }),
+    );
+    expect(second.list).toHaveLength(0);
+    expect(second.search.map((l) => l.props.href)).toEqual([
+      "/search",
+      "/search",
+    ]);
+  });
+
+  it("取得失敗の表示では、再試行先が from を含むURLのまま（同じ画面を開き直せる）", async () => {
+    mocks.fetchStore.mockResolvedValue({ status: "error" });
+    const tree = await renderStorePage({ from: "favorites" });
+    const [error] = findElements(tree, StoreErrorMessage) as {
+      props: { retryHref: string };
+    }[];
+    expect(error.props.retryHref).toBe("/store/1?from=favorites");
+  });
+
+  it("店舗が見つからない場合は、従来どおり notFound()（from は影響しない）", async () => {
+    mocks.fetchStore.mockResolvedValue({ status: "not_found" });
+    mocks.notFound.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+    await expect(renderStorePage({ from: "notes" })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 });

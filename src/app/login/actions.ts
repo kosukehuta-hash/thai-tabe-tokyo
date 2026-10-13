@@ -3,13 +3,16 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeNextPath } from "@/lib/safe-next-path";
+import {
+  EMAIL_PATTERN,
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_TOO_SHORT_ERROR_MESSAGE,
+} from "@/lib/auth-rules";
 
 export type LoginState = {
   error: string | null;
 };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
 const INVALID_CREDENTIALS_MESSAGE =
   "メールアドレスまたはパスワードが正しくありません。";
 const UNEXPECTED_STATE_ERROR_MESSAGE =
@@ -36,7 +39,7 @@ export async function login(
     return { error: "パスワードを入力してください。" };
   }
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return { error: "パスワードは8文字以上で入力してください。" };
+    return { error: PASSWORD_TOO_SHORT_ERROR_MESSAGE };
   }
 
   const supabase = await createClient();
