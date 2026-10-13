@@ -4,6 +4,7 @@ import {
   createImageRequestClassifier,
   createImageRequestClassifierFromEnv,
   expect,
+  imageUrlKey,
   installImageGuard,
   isImageRequestPending,
   judgeImageRequest,
@@ -689,6 +690,86 @@ test.describe("画像通信ガード: 仕組みの動作確認（疑似通信・
     );
     await page.goto(`${ORIGIN}/`);
     await page.waitForLoadState("networkidle");
+  });
+
+  test("確認できない通信: 画面上で読み込み中の画像の通信を、待っても確認できないときは、見逃したまま合格せず失敗する", async ({
+    browser,
+  }) => {
+    await withGuardedPage(
+      browser,
+      async (page) => {
+        await page.route(`${ORIGIN}/**`, (route) =>
+          route.fulfill({
+            contentType: "text/html",
+            body: html("<p>確認できない通信</p>"),
+          }),
+        );
+        // 応答も中止もせずに保留する（画像は読み込み中のままになる）。
+        // ページ単位のrouteが優先され、fallbackもしないため、ガードのrouteには届かない
+        await page.route(`${DUMMY_ORIGIN}/**`, () => {});
+      },
+      async (page, guard) => {
+        // 通信の知らせが、ガードに届かなかった状況を再現する（ガードが通信を記録できない）
+        for (const event of ["request", "requestfailed", "response"] as const) {
+          page.context().removeAllListeners(event);
+        }
+        await page.goto(`${ORIGIN}/`);
+        await addImageWithoutWaiting(
+          page,
+          `${DUMMY_ORIGIN}/storage/v1/object/public/unconfirmed.png`,
+        );
+        const startedAt = Date.now();
+        await expect(
+          assertImageGuardClean(guard, { confirmTimeoutMs: 300 }),
+        ).rejects.toThrow("確認できませんでした");
+        // 指定した上限（300ミリ秒）まで待ち、無限には待たない
+        const elapsed = Date.now() - startedAt;
+        expect(elapsed).toBeGreaterThanOrEqual(250);
+        expect(elapsed).toBeLessThan(3_000);
+        expect(guard.unconfirmed()).toHaveLength(1);
+        // 通信の記録がないため、「通信なし」と判定される状態。失敗にしているのは、確認できなかった画像の検査
+        expect(guard.summary().outcome).toBe("no-traffic");
+      },
+    );
+  });
+
+  test("通信が発生しない画像: 遅延読み込みの画像と、止める対象ではない画像は、待たず、失敗にもならない", async ({
+    browser,
+  }) => {
+    await withGuardedPage(
+      browser,
+      async (page) => {
+        await page.route(`${ORIGIN}/**`, (route) =>
+          route.fulfill({
+            contentType: "text/html",
+            body: html(`
+              <div style="height:12000px"></div>
+              <img alt="" width="40" height="20" loading="lazy" src="${STORE_PHOTO}">
+              <img alt="" width="40" height="20" src="https://other.example.com/a.png">`),
+          }),
+        );
+        // 止める対象ではない画像は、応答せずに保留する（読み込み中のままになる）
+        await page.route("https://other.example.com/**", () => {});
+      },
+      async (page, guard) => {
+        // 保留中の画像があると load が終わらないため、domcontentloaded まで待つ
+        await page.goto(`${ORIGIN}/`, { waitUntil: "domcontentloaded" });
+        const startedAt = Date.now();
+        // 待つ上限を長く（5秒）しても、対象の画像がないので、待たずに終わる
+        await assertImageGuardClean(guard, { confirmTimeoutMs: 5_000 });
+        expect(Date.now() - startedAt).toBeLessThan(4_000);
+        expect(guard.unconfirmed()).toEqual([]);
+        expect(guard.summary().outcome).toBe("no-traffic");
+      },
+    );
+  });
+
+  test("URLの照合: 「#」以降は無視し、それ以外は変えない。URLではない文字列は、そのまま返す", () => {
+    expect(imageUrlKey(`${STORE_PHOTO}#fragment`)).toBe(STORE_PHOTO);
+    expect(imageUrlKey(nextImageUrl(STORE_PHOTO))).toBe(
+      nextImageUrl(STORE_PHOTO),
+    );
+    expect(imageUrlKey("not a url")).toBe("not a url");
   });
 });
 
