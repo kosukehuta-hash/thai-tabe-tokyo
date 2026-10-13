@@ -66,6 +66,14 @@ export function readSupabaseEnv(): { url: string; key: string } {
   return { url, key };
 }
 
+/**
+ * SupabaseのURLのオリジン（https://<project>.supabase.co の形）。
+ * 画像通信を止める対象の判定（e2e/fixtures.ts）に使う。値そのものはログに出力しない。
+ */
+export function getSupabaseOrigin(): string {
+  return new URL(readSupabaseEnv().url).origin;
+}
+
 async function restGet<T>(queryPath: string): Promise<T> {
   const { url, key } = readSupabaseEnv();
   const res = await fetch(`${url}/rest/v1/${queryPath}`, {

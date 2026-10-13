@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "./fixtures";
 
 /**
  * カテゴリ見出し（例:「場所から選ぶ」）のテキストを起点に、
