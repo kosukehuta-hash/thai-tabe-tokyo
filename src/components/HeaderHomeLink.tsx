@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FROM_SEARCH_STORAGE_KEY } from "@/app/store/[storeId]/BackToSearchLink";
+import { clearCameFromSearchMark } from "@/lib/from-search-mark";
 
 type HeaderHomeLinkProps = {
   className: string;
@@ -19,11 +19,7 @@ export function HeaderHomeLink({
     // U03を「検索結果から来た」状態のまま離れると、印が残り続け、
     // 次回同じ店舗へ検索を経由せず訪問した際に「検索結果に戻る」が
     // 誤ってrouter.back()を使うボタンになってしまう。トップへ戻る時点で印を消す。
-    try {
-      sessionStorage.removeItem(FROM_SEARCH_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    clearCameFromSearchMark();
   };
 
   return (
