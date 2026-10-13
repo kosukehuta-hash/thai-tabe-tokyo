@@ -190,12 +190,35 @@ export function summarizeImageRequests(
   return { outcome, total: records.length, pending, violations };
 }
 
+/** 画面上の画像の通信を、記録が出るまで待つ時間の上限（ミリ秒）の既定値 */
+export const DEFAULT_CONFIRM_TIMEOUT_MS = 2_000;
+
 export type ImageGuard = {
   records: () => ImageRequestRecord[];
   summary: () => ImageGuardSummary;
-  /** ブラウザがすでに発行した通信のイベントを、先に取り込む（検査の直前に呼ぶ） */
-  flush: () => Promise<void>;
+  /**
+   * ブラウザがすでに発行した通信のイベントを、先に取り込む（検査の直前に呼ぶ）。
+   * さらに、画面上で読み込み中の「止める対象の画像」は、その通信の記録が出るまで待つ（上限 confirmTimeoutMs）。
+   * 待っても記録が出なかったものは、失敗にはせず、unconfirmed() に残す（失敗にするのは assertImageGuardClean）。
+   */
+  flush: (options?: { confirmTimeoutMs?: number }) => Promise<void>;
+  /** 直近の flush で、待っても通信の記録を確認できなかった画像の説明（空なら、すべて確認できた） */
+  unconfirmed: () => string[];
 };
+
+/**
+ * 通信のURLの照合用の形。「#」以降（フラグメント）は通信に含まれないため、取り除いて比べる。
+ * URLとして解釈できない文字列は、そのまま返す。
+ */
+export function imageUrlKey(rawUrl: string): string {
+  try {
+    const url = new URL(rawUrl);
+    url.hash = "";
+    return url.href;
+  } catch {
+    return rawUrl;
+  }
+}
 
 function describeRequestUrl(rawUrl: string): string {
   try {
@@ -214,6 +237,9 @@ export async function installImageGuard(
   classify: ImageRequestClassifier,
 ): Promise<ImageGuard> {
   const recordsByRequest = new Map<Request, ImageRequestRecord>();
+  // 記録を作った通信のURL（imageUrlKey の形）。画面上の画像の通信を、記録できたかの照合に使う。
+  const recordedUrls = new Set<string>();
+  let unconfirmedImages: string[] = [];
 
   // 対象のリクエストだけ、記録を作る（対象外は null）。イベントの順序に左右されないよう、どこからでも呼べる。
   const recordOf = (request: Request): ImageRequestRecord | null => {
@@ -225,6 +251,7 @@ export async function installImageGuard(
     if (!kind) {
       return null;
     }
+    recordedUrls.add(imageUrlKey(request.url()));
     const created: ImageRequestRecord = {
       kind,
       label: describeRequestUrl(request.url()),
@@ -297,19 +324,65 @@ export async function installImageGuard(
   // 限界: ブラウザがまだ発行していない通信は、取り込めない。実アプリでの効果は未確認。
   //   なお、通信そのものの中止は、この処理とは無関係に、ガードのrouteが行う（これは、検査の精度のための処理）。
   // ページが応答しない場合に備え、1ページあたり1秒で打ち切り、失敗にはせず先へ進む（判定は、この後の検査が行う）。
-  const flush = async () => {
-    await Promise.all(
-      context
-        .pages()
-        .map((page) =>
-          Promise.race([
-            page.evaluate(() => undefined).catch(() => undefined),
-            new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
-          ]),
-        ),
+  //
+  // 上の往復だけでは、通信の発行の知らせが、検査より遅れて届くことがある（CPUが忙しいときなど）。
+  // そこで、往復のついでに、画面上で「読み込み中」の画像のURLも集める。
+  //   対象: 読み込みが終わっておらず（complete が偽）、遅延読み込み（loading="lazy"）ではない <img>。
+  //         ブラウザが選んだ取得先（currentSrc。なければ src）を使う。
+  //   待つもの: そのうち、止める対象のURLの通信の記録。画面に画像がある以上、通信は必ず発行されるので、
+  //         記録が出るまで待てば、時間の運に左右されずに、通信を取り込める。
+  //   上限: confirmTimeoutMs（既定2秒）。上限を過ぎても記録が出ないものは、unconfirmed() に残す。
+  //         flush 自体は失敗にしない。見逃したまま合格しないよう、assertImageGuardClean が失敗にする。
+  //   誤って失敗にしない工夫: 読み込み済み・読み込みに失敗した画像（complete が真）、遅延読み込みの画像、
+  //         止める対象ではない画像は、対象にしない。通信を発生させない画像は、ここに入らない。
+  // 限界: <img> 以外の通信（CSSの背景画像、スクリプトの fetch()、画面に付けていない new Image()、
+  //         <link rel="preload">）は、画面から取り出せないため、待てない（従来どおり、往復だけで取り込む）。
+  //         ページの移動中などで画面を調べられなかった場合も、同様に待てない。
+  const flush = async ({
+    confirmTimeoutMs = DEFAULT_CONFIRM_TIMEOUT_MS,
+  }: { confirmTimeoutMs?: number } = {}) => {
+    const urlLists = await Promise.all(
+      context.pages().map((page) => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const timeout = new Promise<string[]>((resolve) => {
+          timer = setTimeout(() => resolve([]), 1_000);
+        });
+        const inFlight = page
+          .evaluate(() =>
+            Array.from(document.images)
+              .filter((img) => !img.complete && img.loading !== "lazy")
+              .map((img) => img.currentSrc || img.src)
+              .filter((url) => url !== ""),
+          )
+          .catch(() => [] as string[]);
+        return Promise.race([inFlight, timeout]).finally(() =>
+          clearTimeout(timer),
+        );
+      }),
+    );
+    const expectedUrls = [
+      ...new Set(
+        urlLists
+          .flat()
+          .filter((url) => classify(url) !== null)
+          .map(imageUrlKey),
+      ),
+    ];
+    const missing = () => expectedUrls.filter((url) => !recordedUrls.has(url));
+    const deadline = Date.now() + confirmTimeoutMs;
+    while (missing().length > 0 && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    unconfirmedImages = missing().map(
+      (url) => `[${classify(url)}] ${describeRequestUrl(url)}`,
     );
   };
-  return { records, summary: () => summarizeImageRequests(records()), flush };
+  return {
+    records,
+    summary: () => summarizeImageRequests(records()),
+    flush,
+    unconfirmed: () => [...unconfirmedImages],
+  };
 }
 
 /**
@@ -317,12 +390,15 @@ export async function installImageGuard(
  * - 未完了の通信（isImageRequestPending）が残っている間は、正常終了と判定しない。
  * - 未完了が timeoutMs（既定3秒）のうちに解消しない場合は、未完了の通信を示して失敗させる。
  * - 未完了がなくなってから、通信漏れ・中止失敗（violations）を検査し、1件でもあれば失敗させる。
+ * - 画面上で読み込み中の「止める対象の画像」が、confirmTimeoutMs（既定2秒）待っても通信の記録を確認できなかった場合は、
+ *   通信を見逃したまま「問題なし」と判定しないよう、失敗させる。
+ *   （読み込み済み・遅延読み込み・止める対象ではない画像は、対象にしないので、通信が発生しない画像では失敗しない）
  */
 export async function assertImageGuardClean(
   guard: ImageGuard,
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; confirmTimeoutMs?: number } = {},
 ): Promise<void> {
-  await guard.flush();
+  await guard.flush({ confirmTimeoutMs: options.confirmTimeoutMs });
   await expect
     .poll(() => guard.summary().pending, {
       message:
@@ -335,6 +411,10 @@ export async function assertImageGuardClean(
   expect(guard.summary().violations, "画像通信の検証に失敗しました").toEqual(
     [],
   );
+  expect(
+    guard.unconfirmed(),
+    "画面上で読み込み中の画像の通信を、待っても確認できませんでした（通信を見逃した可能性があります）",
+  ).toEqual([]);
 }
 
 export const test = base.extend<{ imageGuard: ImageGuard }>({
