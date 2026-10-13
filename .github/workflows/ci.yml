@@ -80,8 +80,30 @@ jobs:
         with:
           version: 2.120.0
 
+      # supabase start は、起動の最後に、ローカルSupabaseのキー（Publishable・Secret など）を含む表を表示する。
+      # このリポジトリは公開のため、Actionsのログも公開される。そのため、出力は一時ファイルへ保存し、ログには直接表示しない。
+      # 失敗したときだけ、表の行を除き、キー・トークン形式の文字列を伏せた末尾60行を表示する。
+      # 伏せられたことを確認できない場合は、詳細ログを表示しない。一時ファイルは、成功・失敗にかかわらず削除する。
       - name: Start local Supabase
-        run: supabase start
+        run: |
+          start_log="$(mktemp "$RUNNER_TEMP/supabase-start.XXXXXX")"
+          trap 'rm -f "$start_log"' EXIT
+          if supabase start > "$start_log" 2>&1; then
+            echo "Local Supabase started. (supabase start の出力は、キーを含むため、ログに表示しません)"
+          else
+            echo "::error::supabase start が失敗しました。"
+            # 1) 表の罫線を含む行（キーの一覧が入る）を除く  2) キー・トークン形式の文字列を伏せる  3) 末尾60行だけにする
+            safe_log="$(grep -vE '│|├|┌|└|┐|┘|┤|┬|┴|┼|─|╭|╮|╰|╯' "$start_log" \
+              | sed -E 's/(sb_(secret|publishable)_)[A-Za-z0-9_-]+/\1***/g; s/eyJ[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*/***/g; s/[A-Za-z0-9_-]{32,}/***/g' \
+              | tail -n 60 || true)"
+            # 4) 伏せ残しがないか確認する。確認できない場合は、詳細ログを表示しない
+            if printf '%s' "$safe_log" | grep -qE 'sb_(secret|publishable)_[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{8,}|[A-Za-z0-9_-]{32,}'; then
+              echo "::error::キーなどを伏せられたことを確認できないため、詳細ログは表示しません。"
+            else
+              printf '%s\n' "$safe_log"
+            fi
+            exit 1
+          fi
 
       - name: Reset local database (migrations + seed)
         run: supabase db reset
